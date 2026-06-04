@@ -107,27 +107,27 @@ function DashboardHero() {
 
       <div className="relative z-10 grid min-h-[380px] grid-cols-[0.78fr_1.22fr] items-center gap-8 px-9 py-8 max-[1100px]:grid-cols-[0.9fr_1.1fr] max-[900px]:min-h-[640px] max-[900px]:grid-cols-1 max-[900px]:content-start max-[900px]:gap-5 max-[900px]:px-5">
         <div className="dashboard-rise max-w-xl self-center max-[900px]:order-2">
-          <span className="inline-flex rounded-full bg-white/14 px-4 py-2 text-sm font-bold text-[#F8E8C2] ring-1 ring-white/20 backdrop-blur">
+          <span className="inline-flex rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-[#F8E8C2] ring-1 ring-white/20 backdrop-blur">
             {slide.eyebrow}
           </span>
           <h1 className="mt-4 text-[56px] font-black leading-[0.95] tracking-normal text-white drop-shadow-sm max-[1100px]:text-[46px] max-[640px]:text-[38px]">
             {slide.title}
           </h1>
-          <p className="mt-4 max-w-[520px] text-lg font-semibold leading-relaxed text-white/82 max-[640px]:text-base">
+          <p className="mt-4 max-w-[560px] rounded-2xl bg-[#1E1008]/70 px-5 py-3 text-lg font-bold leading-relaxed text-[#FFF7E8] shadow-[0_14px_34px_rgba(0,0,0,0.24)] ring-1 ring-white/10 backdrop-blur-sm [text-shadow:0_2px_12px_rgba(0,0,0,0.55)] max-[640px]:text-base">
             {slide.subtitle}
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="rounded-2xl bg-[#C89B3C] px-4 py-3 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(200,155,60,0.32)]">
               {slide.metric}
             </span>
-            <span className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/16 backdrop-blur">
+            <span className="rounded-2xl bg-white/20 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur">
               Cập nhật theo thời gian thực
             </span>
           </div>
         </div>
 
         <div className="relative min-h-[310px] max-[900px]:order-1 max-[900px]:min-h-[320px]">
-          <div className="absolute right-0 top-1/2 h-[330px] w-[78%] -translate-y-1/2 overflow-hidden rounded-[34px] border border-white/22 bg-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.42)] max-[1100px]:w-[86%] max-[900px]:left-1/2 max-[900px]:right-auto max-[900px]:w-[82%] max-[900px]:-translate-x-1/2 max-[640px]:h-[280px] max-[640px]:w-full">
+          <div className="absolute right-0 top-1/2 h-[330px] w-[78%] -translate-y-1/2 overflow-hidden rounded-[34px] border border-white/20 bg-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.42)] max-[1100px]:w-[86%] max-[900px]:left-1/2 max-[900px]:right-auto max-[900px]:w-[82%] max-[900px]:-translate-x-1/2 max-[640px]:h-[280px] max-[640px]:w-full">
             <img
               src={slide.image}
               alt={slide.title}
@@ -135,7 +135,7 @@ function DashboardHero() {
             />
           </div>
 
-          <div className="absolute left-2 top-6 h-28 w-36 overflow-hidden rounded-3xl border border-white/24 bg-white/15 p-1 shadow-[0_18px_36px_rgba(0,0,0,0.28)] backdrop-blur max-[640px]:left-0 max-[640px]:top-2 max-[640px]:h-24 max-[640px]:w-28">
+          <div className="absolute left-2 top-6 h-28 w-36 overflow-hidden rounded-3xl border border-white/25 bg-white/20 p-1 shadow-[0_18px_36px_rgba(0,0,0,0.28)] backdrop-blur max-[640px]:left-0 max-[640px]:top-2 max-[640px]:h-24 max-[640px]:w-28">
             <img src={slide.accent} alt="" className="h-full w-full rounded-[20px] object-cover" />
           </div>
 
