@@ -26,6 +26,12 @@ const PROMO_CODES = {
   CROISSANT: { label: 'Giảm 5%', type: 'percent', value: 0.05, max: 20000 },
 };
 
+const MEMBER_TIER_STYLES = {
+  Gold: 'from-[#C89B3C] to-[#8A5A12]',
+  Silver: 'from-[#9CA3AF] to-[#4B5563]',
+  Member: 'from-[#3B2314] to-[#6E4A32]',
+};
+
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 const MOMO_LOGO = '/images/payment/momo-logo.svg';
 const VNPAY_LOGO = '/images/payment/vnpay-logo.svg';
@@ -84,6 +90,45 @@ function getDiscountAmount(promo, total) {
   return Math.min(Math.round(total * promo.value), promo.max || total);
 }
 
+function getMemberTier(points = 0) {
+  if (points >= 1000) return 'Gold';
+  if (points >= 500) return 'Silver';
+  return 'Member';
+}
+
+function MemberCard({ member, estimatedPoints }) {
+  const tier = member.tier || getMemberTier(member.points);
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${MEMBER_TIER_STYLES[tier]} p-4 text-white shadow-[0_14px_32px_rgba(59,35,20,0.22)]`}>
+      <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/15" />
+      <div className="absolute bottom-3 right-4 text-5xl font-black text-white/10">B</div>
+      <div className="relative z-10">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/72">Bloom Member</p>
+            <p className="mt-1 text-lg font-black leading-tight">{member.name}</p>
+            <p className="mt-0.5 text-xs font-semibold text-white/72">{member.phone}</p>
+          </div>
+          <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-extrabold ring-1 ring-white/20">
+            {tier}
+          </span>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-white/16 p-3 ring-1 ring-white/15">
+            <p className="text-xs font-semibold text-white/70">Điểm hiện có</p>
+            <p className="mt-1 text-xl font-black">{member.points || 0}</p>
+          </div>
+          <div className="rounded-xl bg-white/16 p-3 ring-1 ring-white/15">
+            <p className="text-xs font-semibold text-white/70">Dự kiến nhận</p>
+            <p className="mt-1 text-xl font-black">+{estimatedPoints}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function isSnack(item) {
   const haystack = `${item.category || ''} ${item.name || ''}`.toLowerCase();
   return (
@@ -138,6 +183,10 @@ export default function CustomerConfirmPage() {
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromoCode, setAppliedPromoCode] = useState('');
   const [promoMessage, setPromoMessage] = useState('');
+  const [memberPhone, setMemberPhone] = useState(cart.memberCustomer?.phone || '');
+  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberMessage, setMemberMessage] = useState('');
+  const [memberError, setMemberError] = useState('');
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -158,6 +207,7 @@ export default function CustomerConfirmPage() {
   const appliedPromo = appliedPromoCode ? PROMO_CODES[appliedPromoCode] : null;
   const discountAmount = getDiscountAmount(appliedPromo, cartTotal);
   const payableTotal = Math.max(cartTotal - discountAmount, 0);
+  const estimatedMemberPoints = Math.floor(payableTotal / 10000);
   const orderId = null; // order is created on submit; QR uses a generic addInfo until then
   const momoError = method === 'momo' && error.includes('MoMo');
   const vnpayError = method === 'vnpay' && error.includes('VNPay');
@@ -211,12 +261,45 @@ export default function CustomerConfirmPage() {
     setPromoMessage('');
   };
 
+  const lookupMember = async () => {
+    const phone = memberPhone.trim();
+    if (!phone) {
+      setMemberError('Vui lòng nhập số điện thoại để kiểm tra thẻ');
+      setMemberMessage('');
+      return;
+    }
+
+    setMemberLoading(true);
+    setMemberError('');
+    setMemberMessage('');
+    try {
+      const res = await api.post('/public/member', {
+        phone,
+        name: cart.customerName || undefined,
+      });
+      const member = res.data.data.customer;
+      cart.setMemberCustomer(member);
+      setMemberPhone(member.phone);
+      if (!cart.customerName && member.name) cart.setCustomerName(member.name);
+      setMemberMessage(
+        res.data.data.isNew
+          ? 'Đã tạo thẻ thành viên mới cho bạn'
+          : 'Đã tìm thấy thẻ thành viên của bạn'
+      );
+    } catch (err) {
+      setMemberError(err.message || 'Không thể kiểm tra thẻ thành viên');
+    } finally {
+      setMemberLoading(false);
+    }
+  };
+
   const createOrder = async () => {
     const promoNote = appliedPromoCode ? `Mã khuyến mãi: ${appliedPromoCode}` : '';
     const notes = [cart.notes, promoNote].filter(Boolean).join(' | ');
     const res = await api.post('/public/order', {
       tableId,
       customerName: cart.customerName || undefined,
+      customerId: cart.memberCustomer?._id || undefined,
       notes: notes || undefined,
       paymentMethod: method,
       items: cart.list.map((r) => ({ menuItemId: r.menuItem._id, quantity: r.quantity })),
@@ -373,6 +456,63 @@ export default function CustomerConfirmPage() {
           placeholder="Nhập tên của bạn..."
           className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
         />
+      </div>
+
+      {/* member card */}
+      <div className="mt-5 px-4">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[#3B2314]">Thẻ thành viên</p>
+          <span className="rounded-full bg-[#FFF3D8] px-3 py-1 text-xs font-bold text-[#C89B3C]">
+            Tích điểm
+          </span>
+        </div>
+        {cart.memberCustomer ? (
+          <div className="space-y-3">
+            <MemberCard member={cart.memberCustomer} estimatedPoints={estimatedMemberPoints} />
+            <button
+              type="button"
+              onClick={() => {
+                cart.setMemberCustomer(null);
+                setMemberPhone('');
+                setMemberMessage('');
+                setMemberError('');
+              }}
+              className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white text-sm font-bold text-[#5A4232]"
+            >
+              Dùng số điện thoại khác
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-[#E3D3C4] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+            <p className="text-sm font-bold text-[#3B2314]">Nhập SĐT để tích điểm cho đơn này</p>
+            <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
+              10.000đ = 1 điểm. Nếu chưa có thẻ, hệ thống sẽ tạo thẻ mới cho bạn.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={memberPhone}
+                onChange={(e) => {
+                  setMemberPhone(e.target.value);
+                  setMemberError('');
+                  setMemberMessage('');
+                }}
+                inputMode="tel"
+                placeholder="Số điện thoại"
+                className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-[#E3D3C4] bg-[#FAF6F1] px-4 py-3 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
+              />
+              <button
+                type="button"
+                onClick={lookupMember}
+                disabled={memberLoading}
+                className="min-h-[44px] rounded-xl bg-[#3B2314] px-4 text-sm font-bold text-white disabled:opacity-70"
+              >
+                {memberLoading ? 'Đang kiểm tra...' : 'Kiểm tra'}
+              </button>
+            </div>
+            {memberMessage && <p className="mt-2 text-sm font-semibold text-[#0F8A4B]">{memberMessage}</p>}
+            {memberError && <p className="mt-2 text-sm font-semibold text-[#C62828]">{memberError}</p>}
+          </div>
+        )}
       </div>
 
       {/* recommendations */}

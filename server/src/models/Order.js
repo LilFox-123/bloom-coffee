@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema(
     source: { type: String, enum: ['staff', 'customer_kiosk', 'customer_online'], default: 'staff' },
     status: { type: String, enum: ['moi', 'danglam', 'hoantat'], default: 'moi' },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
     customerName: { type: String, default: '' },
     note: { type: String, default: '' },
     items: { type: [orderItemSchema], default: [] },

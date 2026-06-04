@@ -3,9 +3,32 @@ import Table from '../models/Table.js';
 import MenuItem from '../models/MenuItem.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
+import Customer from '../models/Customer.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 const CATEGORY_ORDER = ['Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
+
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\s+/g, '').trim();
+}
+
+function memberTier(points = 0) {
+  if (points >= 1000) return 'Gold';
+  if (points >= 500) return 'Silver';
+  return 'Member';
+}
+
+function memberPayload(customer) {
+  return {
+    _id: customer._id,
+    name: customer.name,
+    phone: customer.phone,
+    points: customer.points,
+    totalSpent: customer.totalSpent,
+    tier: memberTier(customer.points),
+    joinedAt: customer.joinedAt,
+  };
+}
 
 // GET /api/public/table/:tableId
 export const getPublicTable = asyncHandler(async (req, res) => {
@@ -53,9 +76,41 @@ export const getPublicMenu = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { categories } });
 });
 
+// POST /api/public/member
+export const upsertPublicMember = asyncHandler(async (req, res) => {
+  const phone = normalizePhone(req.body.phone);
+  const name = String(req.body.name || '').trim();
+
+  if (!phone || phone.length < 8) {
+    return res.status(400).json({ success: false, message: 'Vui lòng nhập số điện thoại hợp lệ' });
+  }
+
+  let customer = await Customer.findOne({ phone });
+  const isNew = !customer;
+
+  if (!customer) {
+    customer = await Customer.create({
+      name: name || `Khách ${phone.slice(-4)}`,
+      phone,
+      joinedAt: new Date(),
+    });
+  } else if (name && (!customer.name || customer.name.startsWith('Khách '))) {
+    customer.name = name;
+    await customer.save();
+  }
+
+  res.status(isNew ? 201 : 200).json({
+    success: true,
+    data: {
+      customer: memberPayload(customer),
+      isNew,
+    },
+  });
+});
+
 // POST /api/public/order
 export const createPublicOrder = asyncHandler(async (req, res) => {
-  const { tableId, items } = req.body;
+  const { tableId, items, customerId, customerName, notes, note } = req.body;
 
   if (!mongoose.isValidObjectId(tableId)) {
     return res.status(404).json({ success: false, message: 'Bàn không tồn tại' });
@@ -108,9 +163,16 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
       staffId: fallbackStaff._id,
       status: 'moi',
       source: 'customer_kiosk', // persisted only if the schema supports it
+      customerId: mongoose.isValidObjectId(customerId) ? customerId : null,
+      customerName: customerName ? String(customerName).trim() : '',
+      note: notes || note ? String(notes || note).trim() : '',
       items: [],
     });
   }
+
+  if (mongoose.isValidObjectId(customerId)) order.customerId = customerId;
+  if (customerName) order.customerName = String(customerName).trim();
+  if (notes || note) order.note = String(notes || note).trim();
 
   // merge incoming items into the order
   for (const incoming of orderItems) {

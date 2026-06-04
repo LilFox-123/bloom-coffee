@@ -33,6 +33,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const vat = Math.round(subtotal * 0.1);
   const total = subtotal + vat;
+  const resolvedCustomerId = customerId || order.customerId || null;
 
   const invoice = await Invoice.create({
     code: genCode(),
@@ -41,7 +42,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
     tableName: table?.name || '',
     staffId: req.user._id,
     staffName,
-    customerId,
+    customerId: resolvedCustomerId,
     items,
     subtotal,
     vat,
@@ -62,9 +63,9 @@ export const createInvoice = asyncHandler(async (req, res) => {
   }
 
   // cộng điểm khách hàng (1 điểm / 10.000đ)
-  if (customerId) {
+  if (resolvedCustomerId) {
     const earned = Math.floor(total / 10000);
-    await Customer.findByIdAndUpdate(customerId, {
+    await Customer.findByIdAndUpdate(resolvedCustomerId, {
       $inc: { points: earned, totalSpent: total },
     });
   }

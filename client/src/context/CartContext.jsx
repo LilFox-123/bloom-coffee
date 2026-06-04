@@ -7,6 +7,7 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState({});
   const [notes, setNotes] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [memberCustomer, setMemberCustomer] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('tienmat');
   const [tableNumber, setTableNumber] = useState('');
 
@@ -81,6 +82,8 @@ export function CartProvider({ children }) {
     setNotes,
     customerName,
     setCustomerName,
+    memberCustomer,
+    setMemberCustomer,
     paymentMethod,
     setPaymentMethod,
     tableNumber,

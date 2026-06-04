@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   getPublicTable,
   getPublicMenu,
+  upsertPublicMember,
   createPublicOrder,
   createOnlineOrder,
   getPublicOrderStatus,
@@ -14,6 +15,14 @@ const router = Router();
 
 router.get('/table/:tableId', getPublicTable);
 router.get('/menu', getPublicMenu);
+router.post(
+  '/member',
+  [
+    body('phone').notEmpty().withMessage('Vui lòng nhập số điện thoại'),
+  ],
+  validate,
+  upsertPublicMember
+);
 router.post(
   '/order',
   [
