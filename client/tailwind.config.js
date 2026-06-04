@@ -4,74 +4,86 @@ export default {
   theme: {
     extend: {
       colors: {
-        // === Café warm palette ===
+        // === Warm premium cafe palette (cream + nâu + vàng đồng) ===
         cafe: {
-          espresso: '#2C1A0E',
-          brown: '#3D2410',
+          espresso: '#1A0A00',
+          brown: '#5C3317',
+          'brown-light': '#8B5E3C',
           gold: '#C8922A',
-          'gold-hover': '#A87520',
-          'gold-light': '#FEF3DC',
-          cream: '#FDF8F3',
-          warm: '#FEF6EC',
-          text: '#1A0F00',
-          body: '#4A3728',
-          muted: '#9C8472',
+          'gold-hover': '#A0721A',
+          'gold-light': '#E8B84B',
+          'gold-soft': '#FEF3DC',
+          cream: '#F5EDE0',
+          'cream-dark': '#EDE0CC',
+          card: '#FFFAF4',
+          text: '#1A0A00',
+          body: '#3D2B1F',
+          muted: '#7A6355',
           border: '#E8D5BC',
         },
 
         // page & surfaces
-        page: '#FDF8F3',
-        surface: '#FFFFFF',
-        'surface-alt': '#FEF6EC',
+        page: '#F5EDE0',
+        'page-alt': '#EDE0CC',
+        surface: '#FFFAF4',
+        'surface-alt': '#EDE0CC',
 
-        // primary action (gold-brown) — bg-primary / text-primary
+        // primary action (vàng đồng) — bg-primary / text-primary
         primary: {
           DEFAULT: '#C8922A',
-          hover: '#A87520',
+          hover: '#A0721A',
           light: '#FEF3DC',
-          dark: '#8B6020',
+          dark: '#A0721A',
+          bright: '#E8B84B',
         },
 
-        // sidebar
-        sidebar: '#2C1A0E',
+        // brown accents
+        brown: {
+          DEFAULT: '#5C3317',
+          light: '#8B5E3C',
+        },
+
+        // sidebar / dark surfaces
+        sidebar: '#1A0A00',
         'sidebar-active': '#3D2410',
         'sidebar-border': '#C8922A',
-        'sidebar-card': '#1A0A02',
+        'sidebar-card': '#120700',
         'sidebar-text': '#C4A882',
 
         // legacy accent-green aliases now mapped to gold (used across components)
         accent: {
           green: '#C8922A',
-          'green-dark': '#A87520',
+          'green-dark': '#A0721A',
           'green-light': '#FEF3DC',
         },
 
-        // muted -> table headers / hovers / alt rows (warm)
-        muted: '#FEF6EC',
+        // muted -> hovers / alt rows / icon wells (warm cream)
+        muted: '#EFE2CF',
 
         // text
         text: {
-          primary: '#1A0F00',
-          body: '#4A3728',
-          muted: '#9C8472',
+          primary: '#1A0A00',
+          body: '#3D2B1F',
+          muted: '#7A6355',
         },
-        heading: '#1A0F00',
-        body: '#4A3728',
+        heading: '#1A0A00',
+        body: '#3D2B1F',
 
         brdr: '#E8D5BC',
         'brdr-light': '#F3E8D8',
 
-        danger: '#C62828',
+        danger: '#C0392B',
         'danger-light': '#FFEBEE',
         warning: '#E65100',
         'warning-light': '#FBE9E7',
-        success: '#2E7D32',
+        success: '#4A8C5C',
         'success-light': '#E8F5E9',
         info: '#1565C0',
         'info-light': '#E3F2FD',
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
       },
       fontSize: {
         base: '14px',
@@ -104,6 +116,18 @@ export default {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-14px)' },
         },
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-left': {
+          '0%': { opacity: '0', transform: 'translateX(-12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'dot-pulse': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.5', transform: 'scale(0.7)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 150ms ease-out',
@@ -112,6 +136,13 @@ export default {
         shimmer: 'shimmer 1.4s linear infinite',
         'toast-in': 'toast-in 250ms ease-out',
         float: 'float 6s ease-in-out infinite',
+        'fade-up': 'fade-up 0.5s ease forwards',
+        'slide-left': 'slide-left 0.4s ease forwards',
+        'dot-pulse': 'dot-pulse 2s ease-in-out infinite',
+      },
+      boxShadow: {
+        card: '0 4px 20px rgba(26,10,0,0.10)',
+        hover: '0 12px 36px rgba(26,10,0,0.18)',
       },
     },
   },

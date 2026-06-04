@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Logo from '../components/Logo';
 import { Spinner } from '../components/ui';
-import { IconBean } from '../components/Icons';
 
 export default function Login() {
   const { user, login, loading } = useAuth();
@@ -43,68 +42,47 @@ export default function Login() {
     }
   };
 
-  const beans = [
-    { top: '8%', left: '12%', size: 38, rot: 20 },
-    { top: '22%', left: '70%', size: 28, rot: -15 },
-    { top: '45%', left: '20%', size: 46, rot: 40 },
-    { top: '60%', left: '78%', size: 32, rot: 10 },
-    { top: '78%', left: '30%', size: 40, rot: -30 },
-    { top: '88%', left: '64%', size: 26, rot: 25 },
-  ];
+  const heroCup = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&q=80';
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* LEFT — espresso brand panel (hidden on mobile) */}
+      {/* LEFT — photo brand panel (hidden on mobile) */}
       <div
-        className="relative hidden lg:flex lg:w-1/2 bg-sidebar text-white overflow-hidden flex-col justify-between p-14"
+        className="relative hidden lg:flex lg:w-1/2 text-white overflow-hidden flex-col justify-between p-14"
         style={{
-          backgroundImage:
-            'radial-gradient(circle at 30% 20%, rgba(200,146,42,0.22), transparent 45%), radial-gradient(circle at 80% 80%, rgba(200,146,42,0.15), transparent 40%)',
+          backgroundImage: `linear-gradient(135deg, rgba(26,10,0,0.78), rgba(92,51,23,0.62)), url('${heroCup}')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
-        {beans.map((b, i) => (
-          <IconBean
-            key={i}
-            className="absolute text-primary"
-            style={{
-              top: b.top,
-              left: b.left,
-              width: b.size,
-              height: b.size,
-              opacity: 0.07,
-              transform: `rotate(${b.rot}deg)`,
-            }}
-          />
-        ))}
-
         <div className="relative flex items-center gap-3">
           <Logo size={48} variant="white" />
-          <span className="text-xl font-bold">Bloom Coffee</span>
+          <span className="font-display italic text-2xl text-primary">Bloom Coffee</span>
         </div>
 
         <div className="relative">
-          <h2 className="text-4xl font-extrabold leading-tight">
+          <h2 className="font-display italic text-5xl font-extrabold leading-tight text-page">
             Quản lý thông minh
             <br />
             Phục vụ tận tâm
           </h2>
-          <p className="mt-4 text-primary/90 max-w-md">
+          <p className="mt-4 text-page/85 max-w-md">
             Hệ thống quản lý quán cà phê toàn diện — bàn, gọi món, hóa đơn, kho và báo cáo trong một
             nền tảng duy nhất.
           </p>
         </div>
 
-        <p className="relative text-white/50 text-sm">© 2026 Bloom Coffee</p>
+        <p className="relative text-page/50 text-sm">© 2026 Bloom Coffee</p>
       </div>
 
       {/* RIGHT — form */}
       <div className="flex-1 bg-page flex items-center justify-center p-6 sm:p-8">
-        <div className="w-full max-w-sm animate-fade-in">
+        <div className="w-full max-w-sm bg-surface rounded-[20px] shadow-hover p-8 sm:p-10 animate-fade-in">
           <div className="flex items-center gap-3 mb-8 lg:hidden">
             <Logo size={44} />
-            <span className="text-xl font-bold text-text-primary">Bloom Coffee</span>
+            <span className="font-display italic text-2xl text-primary">Bloom Coffee</span>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">Đăng nhập vào hệ thống</h1>
+          <h1 className="font-display text-2xl font-bold text-text-primary">Đăng nhập vào hệ thống</h1>
           <p className="text-text-muted text-sm mt-1 mb-8">Chào mừng bạn quay trở lại!</p>
 
           <form onSubmit={onSubmit} className="space-y-4" noValidate>

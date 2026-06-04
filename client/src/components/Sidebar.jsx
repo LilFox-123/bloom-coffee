@@ -30,7 +30,7 @@ const NAV = [
 
 function NavList({ items, full, onNavigate }) {
   return (
-    <nav className="flex-1 overflow-y-auto py-3 space-y-1">
+    <nav className="flex-1 overflow-y-auto py-3 space-y-1 relative">
       {items.map(({ to, label, Icon }) => (
         <NavLink
           key={to}
@@ -38,12 +38,12 @@ function NavList({ items, full, onNavigate }) {
           title={full ? undefined : label}
           onClick={onNavigate}
           className={({ isActive }) =>
-            `flex items-center gap-3 rounded-lg mx-2 border-l-[3px] transition-colors ${
+            `nav-stagger flex items-center gap-3 rounded-lg mx-2 border-l-[3px] transition-colors ${
               full ? 'px-3 py-3.5 text-base' : 'px-3 py-2.5 text-sm justify-center lg:justify-start'
             } ${
               isActive
-                ? 'bg-sidebar-active text-white font-semibold border-sidebar-border'
-                : 'text-sidebar-text border-transparent hover:bg-[rgba(200,146,42,0.12)] hover:text-white'
+                ? 'bg-[rgba(200,146,42,0.18)] text-primary font-semibold border-sidebar-border'
+                : 'text-sidebar-text border-transparent hover:bg-[rgba(245,237,224,0.08)] hover:text-white'
             }`
           }
         >
@@ -52,6 +52,28 @@ function NavList({ items, full, onNavigate }) {
         </NavLink>
       ))}
     </nav>
+  );
+}
+
+const SIDEBAR_BG =
+  'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&q=70';
+
+// dark espresso overlay over the coffee photo
+const sidebarStyle = {
+  backgroundImage: `linear-gradient(rgba(26,10,0,0.92), rgba(26,10,0,0.88)), url('${SIDEBAR_BG}')`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+};
+
+function Brand() {
+  return (
+    <>
+      <Logo size={40} variant="white" />
+      <div className="hidden lg:block">
+        <p className="font-display italic text-primary text-xl leading-tight">☕ Bloom Coffee</p>
+        <p className="text-xs text-sidebar-text">Quản lý thông minh</p>
+      </div>
+    </>
   );
 }
 
@@ -92,13 +114,12 @@ export default function Sidebar({ mobileOpen, onClose }) {
   return (
     <>
       {/* Persistent sidebar — tablet (icon only) & desktop (full) */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen bg-sidebar text-white flex-col no-print z-40 md:w-[60px] lg:w-[240px] transition-[width] duration-200">
+      <aside
+        style={sidebarStyle}
+        className="hidden md:flex fixed left-0 top-0 h-screen bg-sidebar text-white flex-col no-print z-40 md:w-[60px] lg:w-[240px] transition-[width] duration-200"
+      >
         <div className="flex items-center gap-3 px-3 lg:px-5 py-5 justify-center lg:justify-start">
-          <Logo size={40} variant="white" />
-          <div className="hidden lg:block">
-            <p className="font-bold text-lg leading-tight text-white">Bloom Coffee</p>
-            <p className="text-xs text-primary">Quản lý thông minh</p>
-          </div>
+          <Brand />
         </div>
         <NavList items={items} full={false} />
         <UserCard user={user} isAdmin={isAdmin} logout={logout} full={false} />
@@ -112,6 +133,7 @@ export default function Sidebar({ mobileOpen, onClose }) {
         onClick={onClose}
       />
       <aside
+        style={sidebarStyle}
         className={`md:hidden fixed left-0 top-0 h-screen w-[280px] bg-sidebar text-white flex flex-col z-50 shadow-2xl transition-transform duration-200 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -120,8 +142,8 @@ export default function Sidebar({ mobileOpen, onClose }) {
           <div className="flex items-center gap-3">
             <Logo size={40} variant="white" />
             <div>
-              <p className="font-bold text-lg leading-tight text-white">Bloom Coffee</p>
-              <p className="text-xs text-primary">Quản lý thông minh</p>
+              <p className="font-display italic text-primary text-xl leading-tight">☕ Bloom Coffee</p>
+              <p className="text-xs text-sidebar-text">Quản lý thông minh</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white/80 hover:text-white p-1">

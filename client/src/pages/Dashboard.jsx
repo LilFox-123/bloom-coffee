@@ -14,15 +14,42 @@ import { useToast } from '../context/ToastContext';
 import { PageHeader, CardSkeleton, Badge } from '../components/ui';
 import { formatVND, formatDateTime, PAYMENT_LABELS } from '../utils/format';
 import { IconRevenue, IconCart, IconTable, IconWarn } from '../components/Icons';
+import CountUp from '../components/CountUp';
+
+const DASHBOARD_HERO =
+  'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1400&q=80';
+
+function DashboardHero() {
+  return (
+    <div className="relative overflow-hidden rounded-[20px] mb-8 flex items-center justify-between gap-6 px-7 sm:px-12 py-9 sm:py-10 bg-gradient-to-br from-sidebar to-brown">
+      <div className="relative z-10">
+        <p className="text-primary-bright text-[13px] uppercase tracking-[0.1em] mb-2 animate-fade-up [animation-delay:0.1s] opacity-0">
+          Chào mừng trở lại ☕
+        </p>
+        <h1 className="font-display italic text-3xl sm:text-[42px] text-page leading-tight mb-2 animate-fade-up [animation-delay:0.2s] opacity-0">
+          Bloom Coffee
+        </h1>
+        <p className="text-page/60 text-[15px] animate-fade-up [animation-delay:0.3s] opacity-0">
+          Quản lý thông minh — Phục vụ tận tâm
+        </p>
+      </div>
+      <img
+        src={DASHBOARD_HERO}
+        alt="Coffee"
+        className="relative z-10 hidden sm:block w-[220px] h-[160px] object-cover rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.4)] shrink-0 animate-fade-up [animation-delay:0.15s] opacity-0"
+      />
+    </div>
+  );
+}
 
 function KpiCard({ icon, iconBg, label, value, trend }) {
   return (
-    <div className="card !rounded-2xl transition-all hover:shadow-md hover:border-primary/40">
+    <div className="stat-card card !rounded-2xl transition-all hover:-translate-y-1 hover:shadow-hover hover:border-primary/40 duration-200">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBg}`}>{icon}</div>
-      <p className="text-sm text-text-muted mt-4 mb-1">{label}</p>
-      <p className="text-2xl sm:text-3xl font-bold text-text-primary">{value}</p>
+      <p className="text-sm text-text-muted mt-4 mb-1 uppercase tracking-[0.05em]">{label}</p>
+      <p className="font-display text-2xl sm:text-3xl font-extrabold text-text-primary">{value}</p>
       {trend !== undefined && (
-        <p className={`text-xs mt-1 font-medium ${trend >= 0 ? 'text-[#2E7D32]' : 'text-[#C62828]'}`}>
+        <p className={`text-xs mt-1 font-medium ${trend >= 0 ? 'text-success' : 'text-danger'}`}>
           {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% so với hôm qua
         </p>
       )}
@@ -78,32 +105,32 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Tổng quan hôm nay" subtitle={today} />
+      <DashboardHero />
 
       {/* Row 1 — KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard
-          icon={<IconRevenue className="text-accent-green" width={24} height={24} />}
-          iconBg="bg-accent-green-light"
+          icon={<IconRevenue className="text-primary" width={24} height={24} />}
+          iconBg="bg-[rgba(200,146,42,0.12)]"
           label="Doanh thu hôm nay"
-          value={formatVND(k.revenueToday)}
+          value={<CountUp value={k.revenueToday} format={formatVND} />}
           trend={k.revenueTrend}
         />
         <KpiCard
           icon={<IconCart className="text-[#1565C0]" width={24} height={24} />}
           iconBg="bg-[#E3F2FD]"
           label="Đơn hàng hôm nay"
-          value={k.ordersToday}
+          value={<CountUp value={k.ordersToday} />}
           trend={k.ordersTrend}
         />
         <KpiCard
-          icon={<IconTable className="text-[#2E7D32]" width={24} height={24} />}
+          icon={<IconTable className="text-success" width={24} height={24} />}
           iconBg="bg-[#E8F5E9]"
           label="Bàn đang phục vụ"
           value={`${k.servingTables}/${k.totalTables}`}
         />
         <KpiCard
-          icon={<IconWarn className="text-[#C62828]" width={24} height={24} />}
+          icon={<IconWarn className="text-danger" width={24} height={24} />}
           iconBg="bg-[#FFEBEE]"
           label="Cảnh báo kho"
           value={`${k.lowStockItems} mặt hàng`}

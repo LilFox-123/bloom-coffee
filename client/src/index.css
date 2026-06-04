@@ -3,34 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --sidebar-bg: #2c1a0e;
-  --sidebar-active-bg: #3d2410;
+  /* Màu nền */
+  --bg-cream: #f5ede0;
+  --bg-cream-dark: #ede0cc;
+  --bg-dark: #1a0a00;
+  --bg-card: #fffaf4;
+
+  /* Màu chữ */
+  --text-dark: #1a0a00;
+  --text-body: #3d2b1f;
+  --text-muted: #7a6355;
+  --text-on-dark: #f5ede0;
+  --text-gold: #c8922a;
+
+  /* Accent */
+  --gold: #c8922a;
+  --gold-light: #e8b84b;
+  --gold-dark: #a0721a;
+  --brown: #5c3317;
+  --brown-light: #8b5e3c;
+
+  /* sidebar */
   --sidebar-active-border: #c8922a;
   --sidebar-hover: rgba(200, 146, 42, 0.12);
 
-  --page-bg: #fdf8f3;
-  --surface: #ffffff;
-  --surface-warm: #fef6ec;
-
-  --primary: #c8922a;
-  --primary-hover: #a87520;
-  --primary-light: #fef3dc;
-  --primary-dark: #8b6020;
-
-  --text-heading: #1a0f00;
-  --text-body: #4a3728;
-  --text-muted: #9c8472;
+  /* Utility */
+  --success: #4a8c5c;
+  --danger: #c0392b;
   --border: #e8d5bc;
   --border-light: #f3e8d8;
-
-  --success: #2e7d32;
-  --success-light: #e8f5e9;
-  --warning: #e65100;
-  --warning-light: #fbe9e7;
-  --danger: #c62828;
-  --danger-light: #ffebee;
-  --info: #1565c0;
-  --info-light: #e3f2fd;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-card: 0 4px 20px rgba(26, 10, 0, 0.1);
+  --shadow-hover: 0 12px 36px rgba(26, 10, 0, 0.18);
+  --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @layer base {
@@ -39,6 +47,13 @@
   }
   body {
     @apply font-sans text-text-body bg-page antialiased;
+    line-height: 1.65;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    @apply font-display;
   }
   * {
     border-color: #e8d5bc;
@@ -47,25 +62,25 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-primary text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-primary-hover hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+    @apply relative overflow-hidden inline-flex items-center justify-center gap-2 min-h-[44px] bg-primary text-[#1A0A00] rounded-lg px-5 py-2.5 text-sm font-bold shadow-sm transition-all hover:bg-primary-hover hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(200,146,42,0.35)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:active:scale-100;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-white border border-brdr text-text-body rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-alt;
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-transparent border-[1.5px] border-primary text-primary rounded-lg px-5 py-2.5 text-sm font-bold transition-colors hover:bg-[rgba(200,146,42,0.08)];
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-danger text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:bg-[#B71C1C] active:scale-95;
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-danger text-white rounded-lg px-5 py-2.5 text-sm font-bold transition-all hover:bg-[#A93226] active:scale-95;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 text-primary rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary-light;
+    @apply inline-flex items-center justify-center gap-2 text-primary rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary-light;
   }
   .card {
-    @apply bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-brdr;
+    @apply bg-surface rounded-2xl p-4 sm:p-6 shadow-card border border-[rgba(200,146,42,0.15)];
   }
   .input {
-    @apply w-full border border-brdr rounded-xl px-4 py-2.5 text-sm text-text-body bg-white outline-none transition placeholder:text-[#C4A882] focus:ring-2 focus:ring-primary/25 focus:border-primary;
+    @apply w-full border border-brdr rounded-lg px-4 py-2.5 text-sm text-text-body bg-surface outline-none transition placeholder:text-[#A38B6F] focus:ring-2 focus:ring-primary/25 focus:border-primary;
   }
   .label {
-    @apply block text-sm font-medium text-text-body mb-1.5;
+    @apply block text-sm font-semibold text-text-body mb-1.5;
   }
   .badge {
     @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
@@ -73,6 +88,167 @@
   .icon-btn {
     @apply w-8 h-8 rounded-lg flex items-center justify-center text-text-muted transition-colors hover:bg-primary-light hover:text-primary;
   }
+}
+
+/* Button ripple */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  border-radius: inherit;
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+.btn-primary:active::after {
+  transform: scale(2.5);
+  opacity: 0;
+}
+
+/* Staggered entrance helpers */
+.stat-card {
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+.stat-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stat-card:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.stat-card:nth-child(3) {
+  animation-delay: 0.19s;
+}
+.stat-card:nth-child(4) {
+  animation-delay: 0.26s;
+}
+
+.menu-card {
+  opacity: 0;
+  overflow: hidden;
+  animation: fadeUp 0.45s ease forwards;
+}
+.menu-card:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.menu-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.menu-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.menu-card:nth-child(4) {
+  animation-delay: 0.16s;
+}
+.menu-card:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.menu-card:nth-child(6) {
+  animation-delay: 0.24s;
+}
+.menu-card:nth-child(n + 7) {
+  animation-delay: 0.28s;
+}
+.menu-card-img {
+  transition: transform 0.4s ease;
+}
+.menu-card:hover .menu-card-img {
+  transform: scale(1.06);
+}
+
+.nav-stagger {
+  opacity: 0;
+  animation: slideLeft 0.4s ease forwards;
+}
+.nav-stagger:nth-child(1) {
+  animation-delay: 0.08s;
+}
+.nav-stagger:nth-child(2) {
+  animation-delay: 0.14s;
+}
+.nav-stagger:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.nav-stagger:nth-child(4) {
+  animation-delay: 0.26s;
+}
+.nav-stagger:nth-child(5) {
+  animation-delay: 0.32s;
+}
+.nav-stagger:nth-child(6) {
+  animation-delay: 0.38s;
+}
+.nav-stagger:nth-child(7) {
+  animation-delay: 0.44s;
+}
+.nav-stagger:nth-child(8) {
+  animation-delay: 0.5s;
+}
+.nav-stagger:nth-child(9) {
+  animation-delay: 0.56s;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* "Còn hàng" badge — pulsing dot */
+.badge-available {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge-available::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.7);
+  }
+}
+
+/* Dark themed table headers across list pages (BƯỚC 6) */
+.bloom-main table thead {
+  background: var(--bg-dark);
+}
+.bloom-main table thead th {
+  color: var(--text-on-dark);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+}
+.bloom-main table tbody tr:hover {
+  background: rgba(200, 146, 42, 0.06);
 }
 
 /* Skeleton shimmer */
@@ -146,7 +322,25 @@
     width: 100%;
     padding: 24px;
   }
+  /* keep printed receipts light */
+  #print-area table thead {
+    background: #fff !important;
+  }
+  #print-area table thead th {
+    color: #000 !important;
+  }
   .no-print {
     display: none !important;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

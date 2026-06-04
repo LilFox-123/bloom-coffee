@@ -9,7 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { formatVND } from '../utils/format';
 
 const CATEGORIES = ['Tất cả', 'Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
-const emptyForm = { name: '', category: 'Cà phê', price: '', description: '', isAvailable: true };
+const emptyForm = { name: '', category: 'Cà phê', price: '', description: '', imageUrl: '', isAvailable: true };
 
 export default function Menu() {
   const { isAdmin } = useAuth();
@@ -46,7 +46,7 @@ export default function Menu() {
   };
   const openEdit = (m) => {
     setEditing(m);
-    setForm({ name: m.name, category: m.category, price: m.price, description: m.description, isAvailable: m.isAvailable });
+    setForm({ name: m.name, category: m.category, price: m.price, description: m.description, imageUrl: m.imageUrl || '', isAvailable: m.isAvailable });
     setErrors({});
     setModal(true);
   };
@@ -134,26 +134,35 @@ export default function Menu() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="skeleton h-28 rounded-xl" />
+            <div key={i} className="skeleton h-64 rounded-2xl" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState title="Không có món nào" message="Thử đổi danh mục hoặc thêm món mới." />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           {filtered.map((m) => (
-            <div key={m._id} className={`card !p-4 flex gap-3 ${!m.isAvailable ? 'opacity-70' : ''}`}>
-              <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center text-text-muted text-xs shrink-0">
-                {m.category.split(' ')[0]}
-              </div>
-              <div className="flex-1 min-w-0">
+            <div
+              key={m._id}
+              className={`menu-card bg-surface border border-[rgba(200,146,42,0.12)] rounded-2xl shadow-card transition-all duration-200 hover:-translate-y-1 hover:shadow-hover ${
+                !m.isAvailable ? 'opacity-70' : ''
+              }`}
+            >
+              {m.imageUrl ? (
+                <img src={m.imageUrl} alt={m.name} className="menu-card-img w-full aspect-[4/3] object-cover block" />
+              ) : (
+                <div className="w-full aspect-[4/3] flex items-center justify-center text-[40px] bg-gradient-to-br from-[#EDE0CC] to-[#D4B896]">
+                  ☕
+                </div>
+              )}
+              <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold leading-tight">{m.name}</p>
+                  <p className="font-display font-bold text-base text-text-primary leading-tight">{m.name}</p>
                   {isAdmin && (
                     <div className="flex gap-1 shrink-0">
-                      <button className="text-text-muted hover:text-accent-green-dark" onClick={() => openEdit(m)}>
+                      <button className="text-text-muted hover:text-primary-dark" onClick={() => openEdit(m)}>
                         <IconEdit width={16} height={16} />
                       </button>
                       <button className="text-text-muted hover:text-danger" onClick={() => setConfirm(m)}>
@@ -162,14 +171,18 @@ export default function Menu() {
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-text-muted mt-0.5 line-clamp-1">{m.description}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="font-bold text-accent-green-dark">{formatVND(m.price)}</span>
+                <p className="text-[13px] text-text-muted mt-1 line-clamp-2 min-h-[2.4em]">{m.description}</p>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="font-bold text-lg text-primary-dark">{formatVND(m.price)}</span>
                   <button
                     onClick={() => isAdmin && toggleAvail(m)}
-                    className={`badge ${m.isAvailable ? 'bg-accent-green-light text-primary-dark' : 'bg-[#F5F0EB] text-[#9C8472]'} ${isAdmin ? 'cursor-pointer' : ''}`}
+                    className={`badge border ${
+                      m.isAvailable
+                        ? 'badge-available bg-[rgba(74,140,92,0.12)] text-success border-[rgba(74,140,92,0.25)]'
+                        : 'bg-[rgba(192,57,43,0.10)] text-danger border-[rgba(192,57,43,0.20)]'
+                    } ${isAdmin ? 'cursor-pointer' : ''}`}
                   >
-                    {m.isAvailable ? 'Còn hàng' : 'Hết'}
+                    {m.isAvailable ? 'Còn hàng' : 'Hết hàng'}
                   </button>
                 </div>
               </div>
@@ -203,6 +216,10 @@ export default function Menu() {
           <div>
             <label className="label">Mô tả</label>
             <input className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Ảnh món (URL, không bắt buộc)</label>
+            <input className="input" placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} />
