@@ -11,38 +11,71 @@ const TABS = ['Tất cả', 'Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'
 
 const SLIDES = [
   {
-    bg: 'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=1200&q=80',
+    bg: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85',
     product:
-      'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=520&q=80',
+      'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=720&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=420&q=80',
     productAlt: 'Matcha Latte Nhật Bản',
     fallbackColor: '#3B2314',
-    badge: { text: 'MỚI', cls: 'bg-[#C89B3C] text-white' },
+    badge: { text: 'MỚI HÔM NAY', cls: 'bg-[#C89B3C] text-white' },
     heading: ['Matcha Latte', 'Nhật Bản'],
-    sub: 'Vị matcha nguyên chất từ Uji',
-    subCls: 'text-[#F3DCA2]',
+    sub: 'Vị matcha nguyên chất từ Uji, béo nhẹ và thơm mịn',
+    cta: 'Thử ngay',
   },
   {
-    bg: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=1200&q=80',
+    bg: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=85',
     product:
-      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=520&q=80',
+      'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=720&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=420&q=80',
     productAlt: 'Mua 2 tặng 1',
     fallbackColor: '#1F5A3D',
-    badge: { text: 'ƯU ĐÃI', cls: 'bg-white/15 text-white ring-1 ring-white/25' },
-    heading: ['Mua 2 tặng 1'],
-    sub: 'Áp dụng cho tất cả trà sữa hôm nay',
-    subCls: 'text-green-100',
+    badge: { text: 'ƯU ĐÃI COMBO', cls: 'bg-white/20 text-white ring-1 ring-white/25' },
+    heading: ['Mua 2', 'tặng bánh'],
+    sub: 'Gọi nước kèm croissant để bữa nhẹ trọn vị hơn',
+    cta: 'Xem combo',
   },
   {
-    bg: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80',
+    bg: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1200&q=85',
     product:
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=520&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=720&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=420&q=80',
     productAlt: 'Tích điểm mỗi đơn hàng',
     fallbackColor: '#3B2314',
-    badge: { text: 'ĐIỂM THƯỞNG', cls: 'bg-white/15 text-white ring-1 ring-white/25' },
+    badge: { text: 'ĐIỂM THƯỞNG', cls: 'bg-white/20 text-white ring-1 ring-white/25' },
     heading: ['Tích điểm', 'mỗi đơn hàng'],
-    sub: '10.000₫ = 1 điểm · Đổi quà hấp dẫn',
-    subCls: 'text-[#F3DCA2]',
+    sub: '10.000₫ = 1 điểm, đổi topping hoặc món yêu thích',
+    cta: 'Đặt món ngay',
   },
+];
+
+const PROMO_CAMPAIGNS = [
+  {
+    title: 'Combo sáng tỉnh táo',
+    desc: 'Cà phê + bánh ngọt, tiết kiệm hơn khi gọi cùng nhau',
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=520&q=80',
+    tone: 'from-[#3B2314]/95 to-[#3B2314]/35',
+  },
+  {
+    title: 'Trà trái cây mát lành',
+    desc: 'Ưu đãi nhóm bạn khi chọn trà và nước ép',
+    image: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=520&q=80',
+    tone: 'from-[#1F5A3D]/95 to-[#1F5A3D]/30',
+  },
+  {
+    title: 'Bánh mới ra lò',
+    desc: 'Thêm bánh croissant cho ly nước của bạn',
+    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=520&q=80',
+    tone: 'from-[#8A4E24]/95 to-[#8A4E24]/30',
+  },
+];
+
+const CUSTOMER_WIDGETS = [
+  { icon: '⚡', title: 'Pha nhanh', desc: 'Ước tính 10-15 phút' },
+  { icon: '🎁', title: 'Ưu đãi hôm nay', desc: 'Combo nước + bánh' },
+  { icon: '⭐', title: 'Món mới', desc: 'Cập nhật mỗi tuần' },
 ];
 
 const CUSTOMER_MENU_CSS = `
@@ -54,6 +87,38 @@ const CUSTOMER_MENU_CSS = `
   .customer-category-scroll::-webkit-scrollbar {
     display: none;
   }
+
+  @keyframes customer-float {
+    0%, 100% { transform: translateY(0) rotate(-1deg) scale(1); }
+    50% { transform: translateY(-10px) rotate(1deg) scale(1.015); }
+  }
+
+  @keyframes customer-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes customer-shine {
+    0% { transform: translateX(-120%) rotate(18deg); }
+    100% { transform: translateX(180%) rotate(18deg); }
+  }
+
+  .customer-float {
+    animation: customer-float 5.5s ease-in-out infinite;
+  }
+
+  .customer-rise {
+    animation: customer-rise 620ms ease both;
+  }
+
+  .customer-shine::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
+    animation: customer-shine 4.8s ease-in-out infinite;
+  }
 `;
 
 const isNewItem = (item) =>
@@ -61,67 +126,216 @@ const isNewItem = (item) =>
 
 function PromoBanner() {
   const [idx, setIdx] = useState(0);
+  const slide = SLIDES[idx];
 
   useEffect(() => {
-    const id = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 5000);
+    const id = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 5200);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <section className="relative h-[220px] w-full overflow-hidden bg-[#3B2314]">
+    <section className="relative min-h-[360px] w-full overflow-hidden bg-[#3B2314]">
       {SLIDES.map((s, i) => (
         <div
           key={s.productAlt}
-          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
             i === idx ? 'opacity-100' : 'opacity-0'
           }`}
           style={{
             backgroundColor: s.fallbackColor,
-            backgroundImage: `linear-gradient(90deg, rgba(59,35,20,0.95) 0%, rgba(59,35,20,0.82) 40%, rgba(59,35,20,0.22) 70%, rgba(59,35,20,0.04) 100%), url("${s.bg}")`,
+            backgroundImage: `linear-gradient(160deg, rgba(59,35,20,0.96) 0%, rgba(59,35,20,0.76) 42%, rgba(59,35,20,0.16) 100%), url("${s.bg}")`,
             backgroundPosition: 'center',
             backgroundSize: 'cover',
           }}
           aria-hidden={i !== idx}
-        >
-          <div className="relative z-10 flex h-full items-center px-5">
-            <div className="max-w-[58%]">
-              <span
-                className={`inline-flex min-h-[28px] items-center rounded-full px-3 py-1 text-xs font-bold ${s.badge.cls}`}
-              >
-                {s.badge.text}
+        />
+      ))}
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_26%,rgba(255,255,255,0.28),transparent_25%),linear-gradient(180deg,transparent,rgba(0,0,0,0.24))]" />
+
+      <div className="relative z-10 grid min-h-[360px] grid-cols-[0.92fr_1.08fr] items-center gap-4 px-5 py-6">
+        <div className="customer-rise relative z-20">
+          <span
+            className={`inline-flex min-h-[30px] items-center rounded-full px-3 py-1 text-xs font-extrabold shadow-lg ${slide.badge.cls}`}
+          >
+            {slide.badge.text}
+          </span>
+          <h2 className="mt-4 text-[38px] font-black leading-[0.98] tracking-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.42)]">
+            {slide.heading.map((line) => (
+              <span key={line} className="block">
+                {line}
               </span>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight tracking-normal text-white">
-                {s.heading.map((line) => (
-                  <span key={line} className="block">
-                    {line}
-                  </span>
-                ))}
-              </h2>
-              <p className={`mt-2 text-sm font-semibold ${s.subCls}`}>{s.sub}</p>
-            </div>
-            <div className="absolute right-4 top-1/2 z-10 aspect-square w-[34%] min-w-[112px] max-w-[156px] -translate-y-1/2">
-              <img
-                src={s.product}
-                alt={s.productAlt}
-                className="cust-float h-full w-full rounded-full object-cover shadow-[0_18px_38px_rgba(0,0,0,0.34)] ring-4 ring-white/20"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
+            ))}
+          </h2>
+          <p className="mt-4 max-w-[230px] rounded-2xl bg-[#1E1008]/70 px-4 py-3 text-sm font-bold leading-relaxed text-[#FFF7E8] shadow-[0_12px_28px_rgba(0,0,0,0.25)] ring-1 ring-white/10 backdrop-blur-sm">
+            {slide.sub}
+          </p>
+          <div className="mt-4 flex items-center gap-2">
+            <span className="rounded-2xl bg-[#C89B3C] px-4 py-2 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(200,155,60,0.32)]">
+              {slide.cta}
+            </span>
+            <span className="rounded-2xl bg-white/20 px-3 py-2 text-xs font-bold text-white ring-1 ring-white/20 backdrop-blur">
+              Freeship tại bàn
+            </span>
           </div>
         </div>
-      ))}
+
+        <div className="relative min-h-[292px]">
+          <div className="customer-shine absolute right-0 top-2 h-[250px] w-[88%] overflow-hidden rounded-[34px] border border-white/20 bg-white/10 shadow-[0_24px_58px_rgba(0,0,0,0.38)]">
+            <img
+              src={slide.product}
+              alt={slide.productAlt}
+              className="customer-float h-full w-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+
+          <div className="absolute bottom-3 left-0 h-24 w-28 overflow-hidden rounded-3xl border border-white/25 bg-white/20 p-1 shadow-[0_16px_32px_rgba(0,0,0,0.28)] backdrop-blur">
+            <img src={slide.accent} alt="" className="h-full w-full rounded-[20px] object-cover" />
+          </div>
+
+          <div className="absolute bottom-1 right-2 rounded-2xl bg-white/90 px-3 py-2 text-xs font-extrabold text-[#3B2314] shadow-[0_14px_28px_rgba(0,0,0,0.24)]">
+            Hot deal hôm nay
+          </div>
+        </div>
+      </div>
 
       <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
         {SLIDES.map((_, i) => (
-          <span
+          <button
             key={i}
+            type="button"
+            onClick={() => setIdx(i)}
             className={`h-2 rounded-full transition-all duration-300 ${
-              i === idx ? 'w-5 bg-[#C89B3C]' : 'w-2 bg-white/65'
+              i === idx ? 'w-5 bg-[#C89B3C]' : 'w-2 bg-white/60'
             }`}
+            aria-label={`Chọn ưu đãi ${i + 1}`}
           />
         ))}
+      </div>
+    </section>
+  );
+}
+
+function CustomerWidgetStrip() {
+  return (
+    <div className="grid grid-cols-3 gap-2 px-4 py-3">
+      {CUSTOMER_WIDGETS.map((widget, index) => (
+        <div
+          key={widget.title}
+          className="customer-rise rounded-2xl border border-[#E7D4C1] bg-white px-3 py-3 text-center shadow-[0_8px_18px_rgba(59,35,20,0.06)]"
+          style={{ animationDelay: `${index * 90}ms` }}
+        >
+          <span className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-[#FFF3D8] text-lg">
+            {widget.icon}
+          </span>
+          <p className="mt-2 text-[11px] font-extrabold leading-tight text-[#3B2314]">{widget.title}</p>
+          <p className="mt-1 text-[10px] font-semibold leading-tight text-[#8A6F5D]">{widget.desc}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PromoCampaignStrip() {
+  return (
+    <section className="px-4 pb-3">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-extrabold text-[#3B2314]">Ưu đãi nổi bật</h3>
+        <span className="rounded-full bg-[#FFF3D8] px-3 py-1 text-xs font-bold text-[#C89B3C]">
+          Chỉ hôm nay
+        </span>
+      </div>
+      <div className="customer-category-scroll -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+        {PROMO_CAMPAIGNS.map((promo) => (
+          <article
+            key={promo.title}
+            className="relative h-[132px] min-w-[238px] overflow-hidden rounded-3xl bg-[#3B2314] shadow-[0_12px_26px_rgba(59,35,20,0.14)]"
+          >
+            <img src={promo.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className={`absolute inset-0 bg-gradient-to-r ${promo.tone}`} />
+            <div className="relative z-10 flex h-full flex-col justify-end p-4">
+              <p className="text-base font-black leading-tight text-white">{promo.title}</p>
+              <p className="mt-1 max-w-[180px] text-xs font-semibold leading-snug text-white/80">
+                {promo.desc}
+              </p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function NewProductSpotlight({ items, onAdd }) {
+  if (!items.length) return null;
+
+  const hero = items[0];
+  const rest = items.slice(1, 3);
+
+  return (
+    <section className="px-4 pb-3">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-sm font-extrabold text-[#3B2314]">Sản phẩm mới nên thử</h3>
+        <span className="rounded-full bg-[#EAF7EF] px-3 py-1 text-xs font-bold text-[#0F8A4B]">
+          New
+        </span>
+      </div>
+
+      <div className="grid gap-3">
+        <article className="relative min-h-[164px] overflow-hidden rounded-3xl bg-[#3B2314] shadow-[0_14px_30px_rgba(59,35,20,0.16)]">
+          {hero.imageUrl ? (
+            <img src={hero.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0">
+              <CoffeeCupPlaceholder />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#2A160D]/95 via-[#2A160D]/68 to-transparent" />
+          <div className="relative z-10 flex min-h-[164px] max-w-[62%] flex-col justify-center p-4">
+            <span className="mb-2 w-fit rounded-full bg-[#C89B3C] px-3 py-1 text-[10px] font-black text-white">
+              MÓN MỚI
+            </span>
+            <p className="line-clamp-2 text-xl font-black leading-tight text-white">{hero.name}</p>
+            <p className="mt-1 text-sm font-bold text-[#F8E8C2]">{formatVND(hero.price)}</p>
+            <button
+              type="button"
+              onClick={() => onAdd(hero)}
+              className="mt-3 min-h-[44px] w-fit rounded-xl bg-white px-4 text-sm font-extrabold text-[#3B2314]"
+            >
+              + Thêm ngay
+            </button>
+          </div>
+        </article>
+
+        {rest.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {rest.map((item) => (
+              <button
+                key={item._id}
+                type="button"
+                onClick={() => onAdd(item)}
+                className="flex min-h-[88px] items-center gap-3 rounded-2xl border border-[#E7D4C1] bg-white p-2 text-left shadow-[0_8px_18px_rgba(59,35,20,0.06)]"
+              >
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F4E6D4]">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <CoffeeCupPlaceholder />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-xs font-extrabold leading-tight text-[#3B2314]">
+                    {item.name}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-[#C89B3C]">{formatVND(item.price)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -284,6 +498,21 @@ export default function CustomerMenuPage() {
     [categories]
   );
   const visible = tab === 'Tất cả' ? allItems : allItems.filter((i) => i.category === tab);
+  const featuredItems = useMemo(() => {
+    const cartIds = new Set(cart.list.map((row) => row.menuItem._id));
+    const pool = allItems.filter((item) => !cartIds.has(item._id));
+    const preferred = pool.filter((item) => {
+      const text = `${item.name || ''} ${item.category || ''}`.toLowerCase();
+      return (
+        text.includes('matcha') ||
+        text.includes('latte') ||
+        text.includes('bánh') ||
+        text.includes('croissant') ||
+        text.includes('trà')
+      );
+    });
+    return (preferred.length ? preferred : pool).slice(0, 3);
+  }, [allItems, cart.list]);
 
   return (
     <div className="min-h-screen bg-[#FAF6F1] pb-28 text-[#3B2314]">
@@ -314,6 +543,9 @@ export default function CustomerMenuPage() {
       </header>
 
       <PromoBanner />
+      <CustomerWidgetStrip />
+      <PromoCampaignStrip />
+      {!loading && <NewProductSpotlight items={featuredItems} onAdd={(item) => cart.add(item)} />}
 
       <div className="sticky top-[104px] z-10 mt-0 border-b border-[#E2D3C3] bg-[#FAF6F1] px-3 py-2.5">
         <div className="customer-category-scroll flex w-full gap-2 overflow-x-auto">
