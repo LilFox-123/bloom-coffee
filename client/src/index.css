@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-bg: #2c1a0e;
+  --sidebar-active-bg: #3d2410;
+  --sidebar-active-border: #c8922a;
+  --sidebar-hover: rgba(200, 146, 42, 0.12);
+
+  --page-bg: #fdf8f3;
+  --surface: #ffffff;
+  --surface-warm: #fef6ec;
+
+  --primary: #c8922a;
+  --primary-hover: #a87520;
+  --primary-light: #fef3dc;
+  --primary-dark: #8b6020;
+
+  --text-heading: #1a0f00;
+  --text-body: #4a3728;
+  --text-muted: #9c8472;
+  --border: #e8d5bc;
+  --border-light: #f3e8d8;
+
+  --success: #2e7d32;
+  --success-light: #e8f5e9;
+  --warning: #e65100;
+  --warning-light: #fbe9e7;
+  --danger: #c62828;
+  --danger-light: #ffebee;
+  --info: #1565c0;
+  --info-light: #e3f2fd;
+}
+
+@layer base {
+  html {
+    font-size: 14px;
+  }
+  body {
+    @apply font-sans text-text-body bg-page antialiased;
+  }
+  * {
+    border-color: #e8d5bc;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-primary text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-primary-hover hover:shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-white border border-brdr text-text-body rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-alt;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] bg-danger text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all hover:bg-[#B71C1C] active:scale-95;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 text-primary rounded-xl px-3 py-2 text-sm font-semibold transition-colors hover:bg-primary-light;
+  }
+  .card {
+    @apply bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-brdr;
+  }
+  .input {
+    @apply w-full border border-brdr rounded-xl px-4 py-2.5 text-sm text-text-body bg-white outline-none transition placeholder:text-[#C4A882] focus:ring-2 focus:ring-primary/25 focus:border-primary;
+  }
+  .label {
+    @apply block text-sm font-medium text-text-body mb-1.5;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+  }
+  .icon-btn {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center text-text-muted transition-colors hover:bg-primary-light hover:text-primary;
+  }
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #f3e8d8 25%, #fdf8f3 50%, #f3e8d8 75%);
+  background-size: 936px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+/* Customer success checkmark + tracking animations */
+.check-circle {
+  animation: scale-pop 0.35s ease-out;
+}
+@keyframes scale-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.check-mark path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: check-draw 0.5s 0.2s ease forwards;
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Print: chỉ hiện nội dung hóa đơn */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-area,
+  #print-area * {
+    visibility: visible;
+  }
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 24px;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
