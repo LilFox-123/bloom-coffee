@@ -91,6 +91,8 @@ Seed dữ liệu sẽ tự động chạy lần đầu nếu DB rỗng.
 Ở production, Express phục vụ luôn file tĩnh đã build của client:
 
 ```bash
-npm run build      # cài deps + build client
+npm run build      # cài deps (gồm dev cho Vite) + build client
 npm start          # chạy server, phục vụ client/dist
 ```
+
+**Render:** nếu build báo `vite: not found`, đảm bảo build command có `npm install --prefix client --include=dev` (xem `render.yaml`).
