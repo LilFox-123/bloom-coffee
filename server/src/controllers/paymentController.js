@@ -65,8 +65,8 @@ function buildVnpQuery(params) {
 function vnpDate(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return (
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}` +
-    `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+    `${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`
   );
 }
 
@@ -82,7 +82,7 @@ async function updateOrderPaymentStatus(orderId, paymentStatus) {
 /* =====================  MoMo (sandbox v2)  ===================== */
 // POST /api/payment/momo
 export const createMoMoPayment = asyncHandler(async (req, res) => {
-  const { amount, orderInfo, orderId, redirectUrl, ipnUrl } = req.body;
+  const { amount, orderInfo, orderId } = req.body;
 
   if (!amount || !orderId) {
     return res.status(400).json({ success: false, message: 'Thiếu thông tin thanh toán' });
@@ -95,10 +95,8 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
   const requestType = 'captureWallet';
   const extraData = '';
   const info = orderInfo || 'Thanh toan Bloom Coffee';
-  const redirect =
-    redirectUrl || process.env.MOMO_REDIRECT_URL || `${req.protocol}://${req.get('host')}/`;
-  const ipn =
-    ipnUrl || process.env.MOMO_IPN_URL || `${req.protocol}://${req.get('host')}/api/payment/momo/ipn`;
+  const redirect = process.env.MOMO_REDIRECT_URL;
+  const ipn = process.env.MOMO_IPN_URL;
   const momoOrderId = String(orderId);
   const momoAmount = String(amount);
 
