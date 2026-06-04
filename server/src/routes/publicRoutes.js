@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import {
   getPublicTable,
+  getPublicTableOrders,
   getPublicMenu,
   upsertPublicMember,
   createPublicOrder,
@@ -14,6 +15,7 @@ import { validate } from '../middleware/validate.js';
 const router = Router();
 
 router.get('/table/:tableId', getPublicTable);
+router.get('/table/:tableId/orders', getPublicTableOrders);
 router.get('/menu', getPublicMenu);
 router.post(
   '/member',

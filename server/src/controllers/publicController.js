@@ -47,6 +47,24 @@ function memberPayload(customer) {
   };
 }
 
+function publicOrderPayload(order, table) {
+  return {
+    orderId: order._id,
+    tableName: table?.name || '',
+    status: order.status,
+    statusLabel: ORDER_STATUS_LABELS[order.status] || 'Đang xử lý',
+    paymentStatus: order.paymentStatus,
+    paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus] || 'Chờ thanh toán',
+    items: order.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      status: i.status,
+    })),
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
+  };
+}
+
 // GET /api/public/table/:tableId
 export const getPublicTable = asyncHandler(async (req, res) => {
   const { tableId } = req.params;
@@ -65,6 +83,32 @@ export const getPublicTable = asyncHandler(async (req, res) => {
       zone: table.zone,
       capacity: table.capacity,
       status: table.status,
+    },
+  });
+});
+
+// GET /api/public/table/:tableId/orders
+export const getPublicTableOrders = asyncHandler(async (req, res) => {
+  const { tableId } = req.params;
+  if (!mongoose.isValidObjectId(tableId)) {
+    return res.status(404).json({ success: false, message: 'Bàn không tồn tại' });
+  }
+
+  const table = await Table.findById(tableId);
+  if (!table) {
+    return res.status(404).json({ success: false, message: 'Bàn không tồn tại' });
+  }
+
+  const orders = await Order.find({
+    tableId,
+    status: { $ne: 'hoantat' },
+  }).sort({ createdAt: -1 });
+
+  res.json({
+    success: true,
+    data: {
+      tableName: table.name,
+      orders: orders.map((order) => publicOrderPayload(order, table)),
     },
   });
 });
@@ -299,21 +343,5 @@ export const getPublicOrderStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
   }
   const table = await Table.findById(order.tableId);
-  res.json({
-    success: true,
-    data: {
-      orderId: order._id,
-      tableName: table?.name || '',
-      status: order.status,
-      statusLabel: ORDER_STATUS_LABELS[order.status] || 'Đang xử lý',
-      paymentStatus: order.paymentStatus,
-      paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus] || 'Chờ thanh toán',
-      items: order.items.map((i) => ({
-        name: i.name,
-        quantity: i.quantity,
-        status: i.status,
-      })),
-      createdAt: order.createdAt,
-    },
-  });
+  res.json({ success: true, data: publicOrderPayload(order, table) });
 });

@@ -78,6 +78,18 @@ const CUSTOMER_WIDGETS = [
   { icon: '⭐', title: 'Món mới', desc: 'Cập nhật mỗi tuần' },
 ];
 
+const ITEM_STATUS_LABELS = {
+  dangphache: 'Đang pha chế',
+  chuanbiphucvu: 'Chuẩn bị phục vụ',
+  daphucvu: 'Đã phục vụ',
+};
+
+const ITEM_STATUS_CLASSES = {
+  dangphache: 'bg-[#FEF3DC] text-[#C8922A]',
+  chuanbiphucvu: 'bg-[#E3F2FD] text-[#1565C0]',
+  daphucvu: 'bg-[#E8F5E9] text-[#2E7D32]',
+};
+
 const CUSTOMER_MENU_CSS = `
   .customer-category-scroll {
     scrollbar-width: none;
@@ -341,6 +353,115 @@ function NewProductSpotlight({ items, onAdd }) {
   );
 }
 
+function ItemStatusPill({ status }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${
+        ITEM_STATUS_CLASSES[status] || ITEM_STATUS_CLASSES.dangphache
+      }`}
+    >
+      {ITEM_STATUS_LABELS[status] || ITEM_STATUS_LABELS.dangphache}
+    </span>
+  );
+}
+
+function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        aria-label="Đóng đơn của tôi"
+        onClick={onClose}
+      />
+      <section className="relative max-h-[82vh] w-full overflow-hidden rounded-t-[28px] bg-[#FAF6F1] shadow-2xl animate-slide-up">
+        <div className="flex justify-center pt-3">
+          <span className="h-1.5 w-10 rounded-full bg-[#D8C2AC]" />
+        </div>
+
+        <div className="flex items-center justify-between px-4 py-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#9C8472]">{tableName}</p>
+            <h2 className="text-lg font-black text-[#3B2314]">Đơn của tôi</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="min-h-[40px] rounded-xl bg-white px-3 text-sm font-bold text-[#C89B3C] shadow-sm"
+          >
+            Làm mới
+          </button>
+        </div>
+
+        <div className="max-h-[64vh] overflow-y-auto px-4 pb-6">
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="skeleton h-32 rounded-2xl" />
+              ))}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="rounded-2xl border border-[#E3D3C4] bg-white p-5 text-center">
+              <p className="text-sm font-bold text-[#3B2314]">Bạn chưa có đơn đang chờ</p>
+              <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
+                Sau khi đặt món, trạng thái đơn sẽ xuất hiện tại đây.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orders.map((order) => {
+                const shortId = String(order.orderId).slice(-8).toUpperCase();
+                const createdAt = order.createdAt
+                  ? new Date(order.createdAt).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '';
+                return (
+                  <article
+                    key={order.orderId}
+                    className="overflow-hidden rounded-2xl border border-[#E3D3C4] bg-white shadow-[0_8px_20px_rgba(59,35,20,0.06)]"
+                  >
+                    <div className="bg-[#3B2314] px-4 py-3 text-white">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/60">
+                            #{shortId}
+                          </p>
+                          <p className="mt-1 text-base font-black">{order.statusLabel}</p>
+                        </div>
+                        <span className="rounded-full bg-[#C89B3C] px-3 py-1 text-xs font-bold text-white">
+                          {order.paymentStatusLabel}
+                        </span>
+                      </div>
+                      {createdAt && <p className="mt-1 text-xs font-semibold text-white/65">Đặt lúc {createdAt}</p>}
+                    </div>
+
+                    <div className="divide-y divide-[#F3E8D8]">
+                      {order.items.map((item, idx) => (
+                        <div key={`${item.name}-${idx}`} className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="min-w-0">
+                            <p className="line-clamp-1 text-sm font-bold text-[#3B2314]">
+                              <span className="text-[#C89B3C]">{item.quantity}×</span> {item.name}
+                            </p>
+                          </div>
+                          <ItemStatusPill status={item.status} />
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function CoffeeCupPlaceholder() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center bg-[linear-gradient(135deg,#F4E6D4_0%,#FFF8EF_100%)] text-[#3B2314]">
@@ -480,6 +601,9 @@ export default function CustomerMenuPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('Tất cả');
+  const [ordersOpen, setOrdersOpen] = useState(false);
+  const [myOrders, setMyOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -492,6 +616,37 @@ export default function CustomerMenuPage() {
       active = false;
     };
   }, []);
+
+  const loadMyOrders = () => {
+    setOrdersLoading(true);
+    api
+      .get(`/public/table/${tableId}/orders`)
+      .then((res) => setMyOrders(res.data.data.orders || []))
+      .catch(() => {})
+      .finally(() => setOrdersLoading(false));
+  };
+
+  useEffect(() => {
+    let active = true;
+    setOrdersLoading(true);
+    const fetchOrders = () => {
+      api
+        .get(`/public/table/${tableId}/orders`)
+        .then((res) => {
+          if (active) setMyOrders(res.data.data.orders || []);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (active) setOrdersLoading(false);
+        });
+    };
+    fetchOrders();
+    const id = setInterval(fetchOrders, 10000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [tableId]);
 
   const allItems = useMemo(
     () => categories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name }))),
@@ -524,18 +679,32 @@ export default function CustomerMenuPage() {
             <Logo size={36} variant="white" />
             <span className="font-bold text-white">Bloom Coffee</span>
           </div>
-          <button
-            onClick={() => navigate(`/order/${tableId}/cart`)}
-            className="relative flex h-11 w-11 items-center justify-center text-white"
-            aria-label="Giỏ hàng"
-          >
-            <IconCart width={26} height={26} />
-            {cart.count > 0 && (
-              <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#C89B3C] text-xs font-bold text-white">
-                {cart.count}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOrdersOpen(true)}
+              className="relative flex min-h-[44px] items-center rounded-xl bg-white/10 px-3 text-sm font-bold text-white ring-1 ring-white/15"
+            >
+              Đơn
+              {myOrders.length > 0 && (
+                <span className="ml-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C89B3C] px-1 text-xs font-black text-white">
+                  {myOrders.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => navigate(`/order/${tableId}/cart`)}
+              className="relative flex h-11 w-11 items-center justify-center text-white"
+              aria-label="Giỏ hàng"
+            >
+              <IconCart width={26} height={26} />
+              {cart.count > 0 && (
+                <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#C89B3C] text-xs font-bold text-white">
+                  {cart.count}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
         <div className="bg-[#C89B3C] py-2 text-center text-sm font-semibold text-white">
           {table.tableName} · Gọi món tự phục vụ
@@ -543,6 +712,21 @@ export default function CustomerMenuPage() {
       </header>
 
       <PromoBanner />
+      {myOrders.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setOrdersOpen(true)}
+          className="mx-4 mt-3 flex min-h-[54px] w-[calc(100%-2rem)] items-center justify-between rounded-2xl bg-[#3B2314] px-4 text-left text-white shadow-[0_12px_26px_rgba(59,35,20,0.18)]"
+        >
+          <span>
+            <span className="block text-sm font-black">Bạn có {myOrders.length} đơn đang xử lý</span>
+            <span className="mt-0.5 block text-xs font-semibold text-white/65">
+              Bấm để xem trạng thái từng món
+            </span>
+          </span>
+          <span className="rounded-xl bg-[#C89B3C] px-3 py-2 text-xs font-black">Xem</span>
+        </button>
+      )}
       <CustomerWidgetStrip />
       <PromoCampaignStrip />
       {!loading && <NewProductSpotlight items={featuredItems} onAdd={(item) => cart.add(item)} />}
@@ -610,6 +794,15 @@ export default function CustomerMenuPage() {
           </div>
         </div>
       )}
+
+      <MyOrdersPanel
+        open={ordersOpen}
+        orders={myOrders}
+        loading={ordersLoading}
+        tableName={table.tableName}
+        onClose={() => setOrdersOpen(false)}
+        onRefresh={loadMyOrders}
+      />
     </div>
   );
 }
