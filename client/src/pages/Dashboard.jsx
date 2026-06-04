@@ -16,8 +16,61 @@ import { formatVND, formatDateTime, PAYMENT_LABELS } from '../utils/format';
 import { IconRevenue, IconCart, IconTable, IconWarn } from '../components/Icons';
 import CountUp from '../components/CountUp';
 
-const DASHBOARD_HERO =
-  'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1400&q=80';
+const DASHBOARD_SLIDES = [
+  {
+    title: 'Bloom Coffee',
+    subtitle: 'Quản lý thông minh — Phục vụ tận tâm',
+    eyebrow: 'Chào mừng trở lại',
+    metric: 'Không gian quán hôm nay',
+    bg: 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?auto=format&fit=crop&w=1800&q=85',
+    image:
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1000&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=520&q=80',
+  },
+  {
+    title: 'Giờ vàng bán hàng',
+    subtitle: 'Theo dõi doanh thu, đơn mới và món bán chạy trong một màn hình',
+    eyebrow: 'Vận hành mượt hơn',
+    metric: 'Sẵn sàng phục vụ',
+    bg: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1800&q=85',
+    image:
+      'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1000&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=520&q=80',
+  },
+  {
+    title: 'Bếp và quầy luôn rõ nhịp',
+    subtitle: 'Nhìn nhanh tình trạng bàn, tồn kho và hóa đơn mới nhất',
+    eyebrow: 'Dashboard trực quan',
+    metric: 'Tập trung vào trải nghiệm',
+    bg: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1800&q=85',
+    image:
+      'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1000&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=520&q=80',
+  },
+];
+
+const DASHBOARD_ANIMATION_CSS = `
+  @keyframes dashboard-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.015); }
+  }
+
+  @keyframes dashboard-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dashboard-hero-float {
+    animation: dashboard-float 6s ease-in-out infinite;
+  }
+
+  .dashboard-rise {
+    animation: dashboard-rise 680ms ease both;
+  }
+`;
 
 const PAYMENT_BADGE_STYLES = {
   tienmat: 'bg-[#F3F4F6] text-[#4B5563]',
@@ -26,25 +79,94 @@ const PAYMENT_BADGE_STYLES = {
 };
 
 function DashboardHero() {
+  const [active, setActive] = useState(0);
+  const slide = DASHBOARD_SLIDES[active];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActive((idx) => (idx + 1) % DASHBOARD_SLIDES.length);
+    }, 5200);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <section className="relative mb-8 h-[220px] w-full overflow-hidden rounded-2xl bg-[#3B2314] shadow-[0_2px_16px_rgba(0,0,0,0.06)] max-[1200px]:flex max-[1200px]:h-auto max-[1200px]:flex-col">
-      <div
-        className="absolute inset-y-0 right-0 w-[40%] bg-cover bg-center max-[1200px]:relative max-[1200px]:inset-auto max-[1200px]:order-1 max-[1200px]:h-[200px] max-[1200px]:w-full"
-        style={{ backgroundImage: `url('${DASHBOARD_HERO}')` }}
-        aria-label="Bloom Coffee"
-        role="img"
-      />
-      <div className="relative z-10 flex h-full w-[64%] items-center bg-[#3B2314] px-10 [clip-path:polygon(0_0,100%_0,86%_100%,0_100%)] max-[1200px]:order-2 max-[1200px]:h-auto max-[1200px]:w-full max-[1200px]:px-8 max-[1200px]:py-8 max-[1200px]:[clip-path:none]">
-        <div className="pointer-events-none absolute -right-8 inset-y-0 w-24 skew-x-[-10deg] bg-gradient-to-r from-[#3B2314] to-transparent max-[1200px]:hidden" />
-        <div className="relative z-10 max-w-xl">
-          <p className="mb-2 text-base font-semibold text-[#E9D7BC]">Chào mừng trở lại 👋</p>
-          <h1 className="text-[44px] font-extrabold leading-tight tracking-normal text-white">
-            Bloom Coffee
+    <section className="relative mb-8 min-h-[380px] w-full overflow-hidden rounded-[28px] bg-[#3B2314] shadow-[0_20px_46px_rgba(59,35,20,0.22)] max-[900px]:min-h-[640px]">
+      {DASHBOARD_SLIDES.map((item, idx) => (
+        <div
+          key={item.title}
+          className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
+            active === idx ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            backgroundImage: `linear-gradient(100deg, rgba(35,18,9,0.92) 0%, rgba(59,35,20,0.72) 37%, rgba(59,35,20,0.18) 74%, rgba(20,10,5,0.18) 100%), url('${item.bg}')`,
+          }}
+        />
+      ))}
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_24%,rgba(255,255,255,0.24),transparent_26%),linear-gradient(180deg,transparent,rgba(0,0,0,0.24))]" />
+
+      <div className="relative z-10 grid min-h-[380px] grid-cols-[0.78fr_1.22fr] items-center gap-8 px-9 py-8 max-[1100px]:grid-cols-[0.9fr_1.1fr] max-[900px]:min-h-[640px] max-[900px]:grid-cols-1 max-[900px]:content-start max-[900px]:gap-5 max-[900px]:px-5">
+        <div className="dashboard-rise max-w-xl self-center max-[900px]:order-2">
+          <span className="inline-flex rounded-full bg-white/14 px-4 py-2 text-sm font-bold text-[#F8E8C2] ring-1 ring-white/20 backdrop-blur">
+            {slide.eyebrow}
+          </span>
+          <h1 className="mt-4 text-[56px] font-black leading-[0.95] tracking-normal text-white drop-shadow-sm max-[1100px]:text-[46px] max-[640px]:text-[38px]">
+            {slide.title}
           </h1>
-          <p className="mt-2 text-base font-medium text-white/72">
-            Quản lý thông minh — Phục vụ tận tâm
+          <p className="mt-4 max-w-[520px] text-lg font-semibold leading-relaxed text-white/82 max-[640px]:text-base">
+            {slide.subtitle}
           </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="rounded-2xl bg-[#C89B3C] px-4 py-3 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(200,155,60,0.32)]">
+              {slide.metric}
+            </span>
+            <span className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-bold text-white ring-1 ring-white/16 backdrop-blur">
+              Cập nhật theo thời gian thực
+            </span>
+          </div>
         </div>
+
+        <div className="relative min-h-[310px] max-[900px]:order-1 max-[900px]:min-h-[320px]">
+          <div className="absolute right-0 top-1/2 h-[330px] w-[78%] -translate-y-1/2 overflow-hidden rounded-[34px] border border-white/22 bg-white/10 shadow-[0_26px_70px_rgba(0,0,0,0.42)] max-[1100px]:w-[86%] max-[900px]:left-1/2 max-[900px]:right-auto max-[900px]:w-[82%] max-[900px]:-translate-x-1/2 max-[640px]:h-[280px] max-[640px]:w-full">
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="dashboard-hero-float h-full w-full object-cover"
+            />
+          </div>
+
+          <div className="absolute left-2 top-6 h-28 w-36 overflow-hidden rounded-3xl border border-white/24 bg-white/15 p-1 shadow-[0_18px_36px_rgba(0,0,0,0.28)] backdrop-blur max-[640px]:left-0 max-[640px]:top-2 max-[640px]:h-24 max-[640px]:w-28">
+            <img src={slide.accent} alt="" className="h-full w-full rounded-[20px] object-cover" />
+          </div>
+
+          <div className="absolute bottom-4 left-8 rounded-3xl bg-white/90 p-3 shadow-[0_18px_40px_rgba(0,0,0,0.22)] backdrop-blur max-[640px]:left-2">
+            <div className="flex -space-x-3">
+              {DASHBOARD_SLIDES.map((item) => (
+                <img
+                  key={item.accent}
+                  src={item.accent}
+                  alt=""
+                  className="h-12 w-12 rounded-full border-2 border-white object-cover"
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs font-extrabold text-[#3B2314]">Nhiều góc nhìn vận hành</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+        {DASHBOARD_SLIDES.map((item, idx) => (
+          <button
+            key={item.title}
+            type="button"
+            onClick={() => setActive(idx)}
+            className={`h-2.5 rounded-full transition-all ${
+              active === idx ? 'w-8 bg-[#C89B3C]' : 'w-2.5 bg-white/60 hover:bg-white'
+            }`}
+            aria-label={`Chọn hero slide ${idx + 1}`}
+          />
+        ))}
       </div>
     </section>
   );
@@ -65,7 +187,7 @@ function TrendIndicator({ trend }) {
 
 function KpiCard({ icon, iconColor, label, value, trend }) {
   return (
-    <div className="stat-card rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+    <div className="dashboard-rise stat-card rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_36px_rgba(59,35,20,0.12)]">
       <div className="flex items-center gap-3">
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
@@ -83,7 +205,7 @@ function KpiCard({ icon, iconColor, label, value, trend }) {
 
 function ChartCard({ title, children }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+    <div className="dashboard-rise rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)] transition duration-300 hover:shadow-[0_18px_36px_rgba(59,35,20,0.10)]">
       <h3 className="mb-4 text-base font-bold text-[#1A1A1A]">{title}</h3>
       {children}
     </div>
@@ -150,6 +272,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <style>{DASHBOARD_ANIMATION_CSS}</style>
       <DashboardHero />
 
       {/* Row 1 — KPIs */}
