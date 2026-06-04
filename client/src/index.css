@@ -53,7 +53,7 @@
   h2,
   h3,
   .font-display {
-    @apply font-display;
+    font-family: 'Playfair Display', Georgia, serif;
   }
   * {
     border-color: #e8d5bc;
