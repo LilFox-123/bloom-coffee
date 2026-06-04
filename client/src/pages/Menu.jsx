@@ -9,6 +9,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { formatVND } from '../utils/format';
 
 const CATEGORIES = ['Tất cả', 'Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
+const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 const emptyForm = { name: '', category: 'Cà phê', price: '', description: '', imageUrl: '', isAvailable: true };
 
 export default function Menu() {
@@ -177,17 +178,14 @@ export default function Menu() {
                 !m.isAvailable ? 'opacity-70' : ''
               }`}
             >
-              {m.imageUrl ? (
-                <img src={m.imageUrl} alt={m.name} className="menu-card-img w-full aspect-[4/3] object-cover block" />
-              ) : (
-                <div className="w-full aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-[#2A241C] to-[#1A0A00]">
-                  <svg viewBox="0 0 48 48" width="46" height="46" fill="none" className="text-primary">
-                    <path d="M14 20h16v8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-8z" fill="currentColor" opacity="0.92" />
-                    <path d="M30 21h3.5a3.5 3.5 0 0 1 0 7H30" stroke="currentColor" strokeWidth="2" />
-                    <path d="M18 14c1-1.4 1-2.8 0-4.2M24 14c1-1.4 1-2.8 0-4.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
-                  </svg>
-                </div>
-              )}
+              <img
+                src={m.imageUrl || PLACEHOLDER_IMAGE}
+                alt={m.name}
+                className="menu-card-img w-full aspect-[4/3] object-cover block"
+                onError={(e) => {
+                  e.currentTarget.src = PLACEHOLDER_IMAGE;
+                }}
+              />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-display font-bold text-base text-text-primary leading-tight">{m.name}</p>
@@ -252,18 +250,14 @@ export default function Menu() {
             <label className="label">Ảnh món</label>
             <div className="flex items-start gap-4">
               <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-[#2A241C] flex items-center justify-center shrink-0 border border-brdr">
-                {imagePreview || form.imageUrl ? (
-                  <img
-                    src={imagePreview || form.imageUrl}
-                    alt="preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" className="text-primary">
-                    <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="1.6" />
-                    <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="1.6" />
-                  </svg>
-                )}
+                <img
+                  src={imagePreview || form.imageUrl || PLACEHOLDER_IMAGE}
+                  alt="preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = PLACEHOLDER_IMAGE;
+                  }}
+                />
               </div>
               <div className="flex-1 min-w-0 space-y-2">
                 <input

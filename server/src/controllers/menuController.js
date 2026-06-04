@@ -15,7 +15,7 @@ const toBool = (v) => v === true || v === 'true' || v === 'on' || v === '1';
 export const createMenuItem = asyncHandler(async (req, res) => {
   const { name, category, price, description, imageUrl, isAvailable } = req.body;
   // Uploaded file takes priority over a pasted URL.
-  const finalImage = req.file ? `/uploads/menu/${req.file.filename}` : imageUrl || '';
+  const finalImage = req.file ? req.file.path : imageUrl || '';
   const item = await MenuItem.create({
     name,
     category,
@@ -37,7 +37,7 @@ export const updateMenuItem = asyncHandler(async (req, res) => {
   if (imageUrl !== undefined) update.imageUrl = imageUrl;
   if (isAvailable !== undefined) update.isAvailable = toBool(isAvailable);
   // A freshly uploaded file overrides any imageUrl value.
-  if (req.file) update.imageUrl = `/uploads/menu/${req.file.filename}`;
+  if (req.file) update.imageUrl = req.file.path;
 
   const item = await MenuItem.findByIdAndUpdate(req.params.id, update, { new: true });
   if (!item) return res.status(404).json({ success: false, message: 'Không tìm thấy món' });

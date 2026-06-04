@@ -10,6 +10,7 @@ const menuItemSchema = new mongoose.Schema(
     },
     price: { type: Number, required: true, min: 0 }, // VNĐ, integer
     description: { type: String, default: '' },
+    // Previously stored filename, now stores full Cloudinary URL
     imageUrl: { type: String, default: '' },
     isAvailable: { type: Boolean, default: true },
   },

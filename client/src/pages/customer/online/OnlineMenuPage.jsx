@@ -7,25 +7,20 @@ import Logo from '../../../components/Logo';
 import { IconCart } from '../../../components/Icons';
 
 const TABS = ['Tất cả', 'Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
-
-function CupIcon({ className }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} fill="none">
-      <path d="M14 20h16v8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-8z" fill="currentColor" opacity="0.9" />
-      <path d="M30 21h3.5a3.5 3.5 0 0 1 0 7H30" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
+const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
 function MenuCard({ item, qty, onAdd, onInc, onDec }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-[#E8D5BC] overflow-hidden flex flex-col">
       <div className="w-full h-28 bg-gradient-to-br from-[#2A241C] to-[#1A0A00] flex items-center justify-center">
-        {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="w-full h-28 object-cover" />
-        ) : (
-          <CupIcon className="w-11 h-11 text-[#C8922A]" />
-        )}
+        <img
+          src={item.imageUrl || PLACEHOLDER_IMAGE}
+          alt={item.name}
+          className="w-full h-28 object-cover"
+          onError={(e) => {
+            e.currentTarget.src = PLACEHOLDER_IMAGE;
+          }}
+        />
       </div>
       <div className="p-3 flex flex-col flex-1">
         <p className="font-display text-sm font-bold text-[#1A0A00] line-clamp-2 leading-snug min-h-[2.5rem]">

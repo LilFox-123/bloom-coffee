@@ -3,21 +3,23 @@ export default function PaymentMethodCard({ icon, title, desc, selected, onSelec
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 border-2 transition-all min-h-[44px] ${
-        selected ? 'border-[#C8922A] bg-[#FEF3DC]' : 'border-[#E8D5BC] bg-white'
+      className={`flex min-h-[76px] w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-colors ${
+        selected ? 'border-[#C89B3C] bg-[#FEF3DC]' : 'border-[#E3D3C4] bg-white'
       }`}
     >
-      <span className="text-2xl leading-none">{icon}</span>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-[#1A0F00]">{title}</p>
-        <p className="text-xs text-[#9C8472] mt-0.5">{desc}</p>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FAF6F1] text-2xl leading-none">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-[#3B2314]">{title}</p>
+        <p className="mt-0.5 text-xs text-[#8A6F5D]">{desc}</p>
       </div>
       <span
-        className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-          selected ? 'border-[#C8922A]' : 'border-[#E8D5BC]'
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+          selected ? 'border-[#C89B3C]' : 'border-[#D8C2AC]'
         }`}
       >
-        {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#C8922A]" />}
+        {selected && <span className="h-2.5 w-2.5 rounded-full bg-[#C89B3C]" />}
       </span>
     </button>
   );

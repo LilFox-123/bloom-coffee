@@ -20,6 +20,43 @@ const BASE_METHODS = [
   { id: 'chuyenkhoan', icon: '🏦', title: 'Chuyển khoản', desc: 'Quét mã VietQR thanh toán' },
 ];
 
+function EWalletMethodCard({ type, icon, title, desc, selected, onSelect }) {
+  const selectedClasses =
+    type === 'momo'
+      ? 'border-[#E91E8C] bg-[#FDEBF5]'
+      : 'border-[#0056B3] bg-[#EAF3FF]';
+  const iconClasses = type === 'momo' ? 'bg-[#E91E8C]' : 'bg-[#0056B3]';
+  const dotClasses = type === 'momo' ? 'border-[#E91E8C]' : 'border-[#0056B3]';
+  const dotFill = type === 'momo' ? 'bg-[#E91E8C]' : 'bg-[#0056B3]';
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`flex min-h-[76px] w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-colors ${
+        selected ? selectedClasses : 'border-[#E3D3C4] bg-white'
+      }`}
+    >
+      <span
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white ${iconClasses}`}
+      >
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-[#3B2314]">{title}</p>
+        <p className="mt-0.5 text-xs text-[#8A6F5D]">{desc}</p>
+      </div>
+      <span
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+          selected ? dotClasses : 'border-[#D8C2AC]'
+        }`}
+      >
+        {selected && <span className={`h-2.5 w-2.5 rounded-full ${dotFill}`} />}
+      </span>
+    </button>
+  );
+}
+
 export default function CustomerConfirmPage() {
   const { tableId } = useParams();
   const navigate = useNavigate();
@@ -37,6 +74,14 @@ export default function CustomerConfirmPage() {
   const method = cart.paymentMethod;
   const cartTotal = cart.total;
   const orderId = null; // order is created on submit; QR uses a generic addInfo until then
+  const momoError = method === 'momo' && error.includes('MoMo');
+  const vnpayError = method === 'vnpay' && error.includes('VNPay');
+  const generalError = error && !error.includes('MoMo') && !error.includes('VNPay');
+
+  const selectPaymentMethod = (id) => {
+    cart.setPaymentMethod(id);
+    setError('');
+  };
 
   const createOrder = async () => {
     const res = await api.post('/public/order', {
@@ -102,52 +147,52 @@ export default function CustomerConfirmPage() {
     `?amount=${cartTotal}&addInfo=BLOOM${orderId || 'ORDER'}&accountName=${encodeURIComponent(BANK_CONFIG.accountName)}`;
 
   return (
-    <div className="pb-6 min-h-screen flex flex-col">
-      <header className="sticky top-0 z-20 bg-[#2C1A0E] h-16 px-4 flex items-center gap-3">
+    <div className="flex min-h-screen flex-col bg-[#FAF6F1] pb-6 text-[#3B2314]">
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-3 bg-[#3B2314] px-4">
         <button
           onClick={() => navigate(`/order/${tableId}/cart`)}
-          className="text-white text-2xl leading-none p-1"
+          className="flex h-11 w-11 items-center justify-center text-2xl leading-none text-white"
           aria-label="Quay lại"
         >
           ←
         </button>
-        <h1 className="text-white font-bold">Xác nhận đơn hàng</h1>
+        <h1 className="font-bold text-white">Xác nhận đơn hàng</h1>
       </header>
 
       {/* order summary */}
-      <div className="bg-white rounded-2xl border border-[#E8D5BC] mx-4 mt-4 p-4">
+      <div className="mx-4 mt-4 rounded-2xl border border-[#E3D3C4] bg-white p-4">
         {cart.list.map((row) => (
-          <div key={row.menuItem._id} className="flex justify-between text-sm py-1.5">
-            <span className="text-[#4A3728]">
-              <span className="text-[#C8922A] font-semibold">{row.quantity}×</span> {row.menuItem.name}
+          <div key={row.menuItem._id} className="flex justify-between py-1.5 text-sm">
+            <span className="text-[#5A4232]">
+              <span className="font-semibold text-[#C89B3C]">{row.quantity}×</span> {row.menuItem.name}
             </span>
-            <span className="text-[#1A0F00] font-medium">
+            <span className="font-medium text-[#3B2314]">
               {formatVND(row.menuItem.price * row.quantity)}
             </span>
           </div>
         ))}
-        <div className="flex justify-between items-center pt-3 mt-2 border-t border-[#F3E8D8]">
-          <span className="font-semibold text-[#1A0F00]">Tổng cộng</span>
-          <span className="text-lg font-bold text-[#C8922A]">{formatVND(cartTotal)}</span>
+        <div className="mt-2 flex items-center justify-between border-t border-[#F0E4D8] pt-3">
+          <span className="font-semibold text-[#3B2314]">Tổng cộng</span>
+          <span className="text-lg font-bold text-[#C89B3C]">{formatVND(cartTotal)}</span>
         </div>
       </div>
 
       {/* customer name */}
-      <div className="px-4 mt-5">
-        <label className="block text-sm font-medium text-[#4A3728] mb-1.5">
+      <div className="mt-5 px-4">
+        <label className="mb-1.5 block text-sm font-medium text-[#5A4232]">
           Tên của bạn (không bắt buộc)
         </label>
         <input
           value={cart.customerName}
           onChange={(e) => cart.setCustomerName(e.target.value)}
           placeholder="Nhập tên của bạn..."
-          className="w-full border border-[#E8D5BC] rounded-xl px-4 py-3 text-sm bg-white outline-none focus:ring-2 focus:ring-[#C8922A]/25 focus:border-[#C8922A] placeholder:text-[#C4A882]"
+          className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
         />
       </div>
 
       {/* payment method */}
-      <div className="px-4 mt-5">
-        <p className="text-sm font-semibold text-[#1A0F00] mb-2">Hình thức thanh toán</p>
+      <div className="mt-5 px-4">
+        <p className="mb-2 text-sm font-semibold text-[#3B2314]">Hình thức thanh toán</p>
         <div className="space-y-3">
           {BASE_METHODS.map((m) => (
             <PaymentMethodCard
@@ -156,7 +201,7 @@ export default function CustomerConfirmPage() {
               title={m.title}
               desc={m.desc}
               selected={method === m.id}
-              onSelect={() => cart.setPaymentMethod(m.id)}
+              onSelect={() => selectPaymentMethod(m.id)}
             />
           ))}
         </div>
@@ -164,80 +209,74 @@ export default function CustomerConfirmPage() {
 
       {/* VietQR for bank transfer */}
       {method === 'chuyenkhoan' && (
-        <div className="mx-4 mt-4 bg-[#FEF6EC] rounded-2xl border border-[#E8D5BC] p-5 flex flex-col items-center gap-3">
-          <p className="text-sm font-semibold text-[#1A0F00]">Quét mã để thanh toán</p>
+        <div className="mx-4 mt-4 flex flex-col items-center gap-3 rounded-2xl border border-[#E3D3C4] bg-[#FFF8EF] p-5">
+          <p className="text-sm font-semibold text-[#3B2314]">Quét mã để thanh toán</p>
           <img
             src={vietQrSrc}
             alt="QR thanh toán"
-            className="w-48 h-48 rounded-xl border border-[#E8D5BC] bg-white"
+            className="h-48 w-48 rounded-xl border border-[#E3D3C4] bg-white"
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
           <div className="text-center">
-            <p className="text-xs text-[#9C8472]">
-              Ngân hàng: <span className="font-semibold text-[#4A3728]">{BANK_CONFIG.bankId}</span>
+            <p className="text-xs text-[#8A6F5D]">
+              Ngân hàng: <span className="font-semibold text-[#5A4232]">{BANK_CONFIG.bankId}</span>
             </p>
-            <p className="text-xs text-[#9C8472]">
+            <p className="text-xs text-[#8A6F5D]">
               Số tài khoản:{' '}
-              <span className="font-semibold text-[#4A3728] font-mono">{BANK_CONFIG.accountNumber}</span>
+              <span className="font-mono font-semibold text-[#5A4232]">{BANK_CONFIG.accountNumber}</span>
             </p>
-            <p className="text-xs text-[#9C8472]">
-              Chủ TK: <span className="font-semibold text-[#4A3728]">{BANK_CONFIG.accountName}</span>
+            <p className="text-xs text-[#8A6F5D]">
+              Chủ TK: <span className="font-semibold text-[#5A4232]">{BANK_CONFIG.accountName}</span>
             </p>
-            <p className="text-sm font-bold text-[#C8922A] mt-2">{cartTotal.toLocaleString('vi-VN')} ₫</p>
+            <p className="mt-2 text-sm font-bold text-[#C89B3C]">{cartTotal.toLocaleString('vi-VN')} ₫</p>
           </div>
-          <p className="text-xs text-[#9C8472] text-center">
+          <p className="text-center text-xs text-[#8A6F5D]">
             Sau khi chuyển khoản, bấm "Xác nhận đã thanh toán" bên dưới
           </p>
         </div>
       )}
 
       {/* E-wallet: MoMo + VNPay */}
-      <div className="px-4 mt-3">
-        <button
-          type="button"
-          onClick={() => cart.setPaymentMethod('momo')}
-          className={`w-full text-left rounded-2xl p-4 flex items-center gap-3 border-2 transition-colors ${
-            method === 'momo' ? 'border-[#A50064] bg-[#FCF0F5]' : 'border-[#E8D5BC] bg-white'
-          }`}
-        >
-          <span className="w-12 h-12 rounded-full bg-[#A50064] text-white font-bold text-lg flex items-center justify-center shrink-0">
-            M
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[#1A0F00]">Thanh toán qua MoMo</p>
-            <p className="text-xs text-[#9C8472]">Chuyển hướng đến app MoMo</p>
+      <div className="mt-3 px-4">
+        <div className="space-y-3">
+          <div>
+            <EWalletMethodCard
+              type="momo"
+              icon="M"
+              title="Thanh toán qua MoMo"
+              desc="Chuyển hướng đến app MoMo"
+              selected={method === 'momo'}
+              onSelect={() => selectPaymentMethod('momo')}
+            />
+            {momoError && <p className="mt-2 px-1 text-sm font-medium text-[#C62828]">{error}</p>}
           </div>
-        </button>
 
-        <button
-          type="button"
-          onClick={() => cart.setPaymentMethod('vnpay')}
-          className={`w-full text-left rounded-2xl p-4 mt-2 flex items-center gap-3 border-2 transition-colors ${
-            method === 'vnpay' ? 'border-[#0057A8] bg-[#F0F4FF]' : 'border-[#E8D5BC] bg-white'
-          }`}
-        >
-          <span className="w-12 h-12 rounded-full bg-[#0057A8] text-white font-bold text-sm flex items-center justify-center shrink-0">
-            VN
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[#1A0F00]">Thanh toán qua VNPay</p>
-            <p className="text-xs text-[#9C8472]">ATM, Visa, Mastercard, QR Code</p>
+          <div>
+            <EWalletMethodCard
+              type="vnpay"
+              icon="VN"
+              title="Thanh toán qua VNPay"
+              desc="ATM, Visa, Mastercard, QR Code"
+              selected={method === 'vnpay'}
+              onSelect={() => selectPaymentMethod('vnpay')}
+            />
+            {vnpayError && <p className="mt-2 px-1 text-sm font-medium text-[#C62828]">{error}</p>}
           </div>
-        </button>
+        </div>
       </div>
 
-      {error && <p className="text-center text-sm text-[#C62828] mt-4 px-4">{error}</p>}
+      {generalError && <p className="mt-4 px-4 text-center text-sm text-[#C62828]">{error}</p>}
 
       <button
         onClick={submit}
         disabled={submitting}
-        className="bg-[#C8922A] text-white rounded-xl py-4 font-bold text-base mx-4 mt-6 active:scale-95 transition-transform disabled:opacity-70 flex items-center justify-center gap-2"
+        className="mx-4 mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#C89B3C] py-4 text-base font-bold text-white transition-transform active:scale-95 disabled:opacity-70"
       >
         {submitting ? (
           <>
-            <Spinner className="w-5 h-5" /> Đang xử lý...
+            <Spinner className="h-5 w-5" /> Đang xử lý...
           </>
         ) : (
           buttonLabel

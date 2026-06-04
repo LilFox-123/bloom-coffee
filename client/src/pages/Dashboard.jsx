@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import api from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { PageHeader, CardSkeleton, Badge } from '../components/ui';
+import { PageHeader, CardSkeleton } from '../components/ui';
 import { formatVND, formatDateTime, PAYMENT_LABELS } from '../utils/format';
 import { IconRevenue, IconCart, IconTable, IconWarn } from '../components/Icons';
 import CountUp from '../components/CountUp';
@@ -19,53 +19,95 @@ import CountUp from '../components/CountUp';
 const DASHBOARD_HERO =
   'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=1400&q=80';
 
+const PAYMENT_BADGE_STYLES = {
+  tienmat: 'bg-[#F3F4F6] text-[#4B5563]',
+  chuyenkhoan: 'bg-[#DBEAFE] text-[#1D4ED8]',
+  vidientu: 'bg-[#F3E8FF] text-[#7E22CE]',
+};
+
 function DashboardHero() {
   return (
-    <div className="relative overflow-hidden rounded-[20px] mb-8 flex items-center justify-between gap-6 px-7 sm:px-12 py-9 sm:py-10 bg-gradient-to-br from-sidebar to-brown">
-      <div className="relative z-10">
-        <p className="text-primary-bright text-[13px] uppercase tracking-[0.1em] mb-2 animate-fade-up [animation-delay:0.1s] opacity-0">
-          Chào mừng trở lại ☕
-        </p>
-        <h1
-          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 700 }}
-          className="font-display italic text-3xl sm:text-[42px] text-page leading-tight mb-2 animate-fade-up [animation-delay:0.2s] opacity-0"
-        >
-          Bloom Coffee
-        </h1>
-        <p className="text-page/60 text-[15px] animate-fade-up [animation-delay:0.3s] opacity-0">
-          Quản lý thông minh — Phục vụ tận tâm
-        </p>
-      </div>
-      <img
-        src={DASHBOARD_HERO}
-        alt="Coffee"
-        className="relative z-10 hidden sm:block w-[220px] h-[160px] object-cover rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.4)] shrink-0 animate-fade-up [animation-delay:0.15s] opacity-0"
+    <section className="relative mb-8 h-[220px] w-full overflow-hidden rounded-2xl bg-[#3B2314] shadow-[0_2px_16px_rgba(0,0,0,0.06)] max-[1200px]:flex max-[1200px]:h-auto max-[1200px]:flex-col">
+      <div
+        className="absolute inset-y-0 right-0 w-[40%] bg-cover bg-center max-[1200px]:relative max-[1200px]:inset-auto max-[1200px]:order-1 max-[1200px]:h-[200px] max-[1200px]:w-full"
+        style={{ backgroundImage: `url('${DASHBOARD_HERO}')` }}
+        aria-label="Bloom Coffee"
+        role="img"
       />
+      <div className="relative z-10 flex h-full w-[64%] items-center bg-[#3B2314] px-10 [clip-path:polygon(0_0,100%_0,86%_100%,0_100%)] max-[1200px]:order-2 max-[1200px]:h-auto max-[1200px]:w-full max-[1200px]:px-8 max-[1200px]:py-8 max-[1200px]:[clip-path:none]">
+        <div className="pointer-events-none absolute -right-8 inset-y-0 w-24 skew-x-[-10deg] bg-gradient-to-r from-[#3B2314] to-transparent max-[1200px]:hidden" />
+        <div className="relative z-10 max-w-xl">
+          <p className="mb-2 text-base font-semibold text-[#E9D7BC]">Chào mừng trở lại 👋</p>
+          <h1 className="text-[44px] font-extrabold leading-tight tracking-normal text-white">
+            Bloom Coffee
+          </h1>
+          <p className="mt-2 text-base font-medium text-white/72">
+            Quản lý thông minh — Phục vụ tận tâm
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrendIndicator({ trend }) {
+  if (typeof trend !== 'number' || trend === 0) {
+    return <p className="mt-5 text-sm font-semibold text-[#9CA3AF]">—</p>;
+  }
+
+  const isPositive = trend > 0;
+  return (
+    <p className={`mt-5 text-sm font-semibold ${isPositive ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+      <span aria-hidden="true">{isPositive ? '↑' : '↓'}</span> {Math.abs(trend)}% so với hôm qua
+    </p>
+  );
+}
+
+function KpiCard({ icon, iconColor, label, value, trend }) {
+  return (
+    <div className="stat-card rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+          style={{ backgroundColor: iconColor }}
+        >
+          {icon}
+        </div>
+        <p className="text-sm font-semibold text-[#6B7280]">{label}</p>
+      </div>
+      <p className="mt-5 text-[28px] font-extrabold leading-tight text-[#1A1A1A]">{value}</p>
+      <TrendIndicator trend={trend} />
     </div>
   );
 }
 
-function KpiCard({ icon, iconBg, label, value, trend }) {
+function ChartCard({ title, children }) {
   return (
-    <div className="stat-card card !rounded-2xl transition-all hover:-translate-y-1 hover:shadow-hover hover:border-primary/40 duration-200">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBg}`}>{icon}</div>
-      <p className="text-sm text-text-muted mt-4 mb-1 uppercase tracking-[0.05em]">{label}</p>
-      <p className="font-display text-2xl sm:text-3xl font-extrabold text-text-primary">{value}</p>
-      {trend !== undefined && (
-        <p className={`text-xs mt-1 font-medium ${trend >= 0 ? 'text-success' : 'text-danger'}`}>
-          {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% so với hôm qua
-        </p>
-      )}
+    <div className="rounded-2xl bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+      <h3 className="mb-4 text-base font-bold text-[#1A1A1A]">{title}</h3>
+      {children}
     </div>
+  );
+}
+
+function PaymentBadge({ method }) {
+  return (
+    <span
+      className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${
+        PAYMENT_BADGE_STYLES[method] || PAYMENT_BADGE_STYLES.tienmat
+      }`}
+    >
+      {PAYMENT_LABELS[method]}
+    </span>
   );
 }
 
 function CurrencyTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-brdr rounded-xl shadow-lg px-3 py-2 text-sm">
+    <div className="rounded-xl border border-brdr bg-white px-3 py-2 text-sm shadow-lg">
       <p className="font-medium text-text-primary">{label}</p>
-      <p className="text-primary font-semibold">{formatVND(payload[0].value)}</p>
+      <p className="font-semibold text-primary">{formatVND(payload[0].value)}</p>
     </div>
   );
 }
@@ -111,40 +153,39 @@ export default function Dashboard() {
       <DashboardHero />
 
       {/* Row 1 — KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 min-[1025px]:grid-cols-4">
         <KpiCard
-          icon={<IconRevenue className="text-primary" width={24} height={24} />}
-          iconBg="bg-[rgba(200,146,42,0.12)]"
+          icon={<IconRevenue width={22} height={22} />}
+          iconColor="#C89B3C"
           label="Doanh thu hôm nay"
           value={<CountUp value={k.revenueToday} format={formatVND} />}
           trend={k.revenueTrend}
         />
         <KpiCard
-          icon={<IconCart className="text-[#1565C0]" width={24} height={24} />}
-          iconBg="bg-[#E3F2FD]"
+          icon={<IconCart width={22} height={22} />}
+          iconColor="#3B82F6"
           label="Đơn hàng hôm nay"
           value={<CountUp value={k.ordersToday} />}
           trend={k.ordersTrend}
         />
         <KpiCard
-          icon={<IconTable className="text-success" width={24} height={24} />}
-          iconBg="bg-[#E8F5E9]"
+          icon={<IconTable width={22} height={22} />}
+          iconColor="#10B981"
           label="Bàn đang phục vụ"
           value={`${k.servingTables}/${k.totalTables}`}
         />
         <KpiCard
-          icon={<IconWarn className="text-danger" width={24} height={24} />}
-          iconBg="bg-[#FFEBEE]"
+          icon={<IconWarn width={22} height={22} />}
+          iconColor="#EF4444"
           label="Cảnh báo kho"
           value={`${k.lowStockItems} mặt hàng`}
         />
       </div>
 
       {/* Row 2 — charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-4 mb-6">
-        <div className="card">
-          <h3 className="font-semibold text-text-primary mb-4">Doanh thu 30 ngày qua</h3>
-          <ResponsiveContainer width="100%" height={300}>
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr]">
+        <ChartCard title="Doanh thu 30 ngày qua">
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={data.revenue30} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3E8D8" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9C8472' }} interval={3} />
@@ -157,11 +198,10 @@ export default function Dashboard() {
               <Bar dataKey="value" fill="#C8922A" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        <div className="card">
-          <h3 className="font-semibold text-text-primary mb-4">Top 5 món bán chạy</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <ChartCard title="Top 5 món bán chạy">
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart
               layout="vertical"
               data={data.topItems}
@@ -183,46 +223,42 @@ export default function Dashboard() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
       </div>
 
       {/* Row 3 — recent invoices */}
-      <div className="card !p-0 overflow-hidden">
-        <h3 className="font-semibold text-text-primary px-6 py-4">Hóa đơn gần nhất</h3>
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_16px_rgba(0,0,0,0.06)]">
+        <h3 className="px-6 py-4 text-base font-bold text-[#1A1A1A]">Hóa đơn gần nhất</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted text-text-muted">
+            <thead className="bg-[#3B2314] text-white">
               <tr>
-                <th className="text-left font-medium px-6 py-3">Mã HĐ</th>
-                <th className="text-left font-medium px-6 py-3">Bàn</th>
-                <th className="text-left font-medium px-6 py-3">Nhân viên</th>
-                <th className="text-right font-medium px-6 py-3">Tổng tiền</th>
-                <th className="text-left font-medium px-6 py-3">Hình thức TT</th>
-                <th className="text-left font-medium px-6 py-3">Thời gian</th>
+                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-[0.05em]">Mã HĐ</th>
+                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-[0.05em]">Bàn</th>
+                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-[0.05em]">Nhân viên</th>
+                <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-[0.05em]">
+                  Tổng tiền
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-[0.05em]">
+                  Hình thức TT
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-[0.05em]">
+                  Thời gian
+                </th>
               </tr>
             </thead>
             <tbody>
               {data.recentInvoices.map((inv, idx) => (
                 <tr
                   key={inv._id}
-                  className={`border-b border-brdr hover:bg-muted ${idx % 2 ? 'bg-muted/40' : ''}`}
+                  className={`${idx % 2 ? 'bg-[#FAF6F1]' : 'bg-white'} transition-colors hover:bg-[#F3E8D8]`}
                 >
                   <td className="px-6 py-3 font-medium">{inv.code}</td>
                   <td className="px-6 py-3">{inv.tableName}</td>
                   <td className="px-6 py-3">{inv.staffName}</td>
                   <td className="px-6 py-3 text-right font-semibold">{formatVND(inv.total)}</td>
                   <td className="px-6 py-3">
-                    <Badge
-                      color={
-                        inv.paymentMethod === 'chuyenkhoan'
-                          ? 'blue'
-                          : inv.paymentMethod === 'vidientu'
-                          ? 'purple'
-                          : 'gray'
-                      }
-                    >
-                      {PAYMENT_LABELS[inv.paymentMethod]}
-                    </Badge>
+                    <PaymentBadge method={inv.paymentMethod} />
                   </td>
                   <td className="px-6 py-3 text-text-muted">{formatDateTime(inv.createdAt)}</td>
                 </tr>

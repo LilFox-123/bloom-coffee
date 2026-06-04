@@ -1,26 +1,21 @@
 import { formatVND } from '../../utils/format';
 import QuantityStepper from './QuantityStepper';
 
-function CupPlaceholder() {
-  return (
-    <svg viewBox="0 0 48 48" className="w-12 h-12 text-[#E8D5BC]" fill="none">
-      <path d="M14 20h16v8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-8z" fill="currentColor" />
-      <path d="M30 21h3a3 3 0 0 1 0 6h-3" stroke="currentColor" strokeWidth="2" />
-      <path d="M18 14c1-1.2 1-2.4 0-3.6M24 14c1-1.2 1-2.4 0-3.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
+const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
 export default function MenuItemCard({ item, quantity, onAdd, onInc, onDec }) {
   const available = item.isAvailable !== false;
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-[#E8D5BC] overflow-hidden flex flex-col">
       <div className="relative w-full h-28 bg-[#FEF6EC] flex items-center justify-center">
-        {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.name} className="w-full h-28 object-cover" />
-        ) : (
-          <CupPlaceholder />
-        )}
+        <img
+          src={item.imageUrl || PLACEHOLDER_IMAGE}
+          alt={item.name}
+          className="w-full h-28 object-cover"
+          onError={(e) => {
+            e.currentTarget.src = PLACEHOLDER_IMAGE;
+          }}
+        />
         {!available && (
           <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
             <span className="badge bg-[#FFEBEE] text-[#C62828]">Hết hàng</span>

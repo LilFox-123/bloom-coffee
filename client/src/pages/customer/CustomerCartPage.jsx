@@ -5,12 +5,7 @@ import { formatVND } from '../../utils/format';
 import { IconTrash } from '../../components/Icons';
 import QuantityStepper from '../../components/customer/QuantityStepper';
 
-const CART_EMOJI = {
-  'Cà phê': '☕',
-  Trà: '🍵',
-  'Nước ép': '🥤',
-  'Đồ ăn nhẹ': '🧁',
-};
+const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
 function CustomerHeader({ title, onBack, badge }) {
   return (
@@ -78,11 +73,14 @@ export default function CustomerCartPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#FEF6EC] flex items-center justify-center text-xl shrink-0">
-                  {row.menuItem.imageUrl ? (
-                    <img src={row.menuItem.imageUrl} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    CART_EMOJI[row.menuItem.category] || '🍽️'
-                  )}
+                  <img
+                    src={row.menuItem.imageUrl || PLACEHOLDER_IMAGE}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = PLACEHOLDER_IMAGE;
+                    }}
+                  />
                 </div>
                 <p className="text-sm font-semibold text-[#1A0F00]">{row.menuItem.name}</p>
               </div>
