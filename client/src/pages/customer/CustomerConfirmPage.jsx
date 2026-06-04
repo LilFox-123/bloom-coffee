@@ -27,32 +27,21 @@ const PROMO_CODES = {
 };
 
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
+const MOMO_LOGO = '/images/payment/momo-logo.svg';
+const VNPAY_LOGO = '/images/payment/vnpay-logo.svg';
 
 function MoMoLogo() {
   return (
-    <span className="grid h-12 w-12 shrink-0 grid-cols-2 overflow-hidden rounded-xl bg-[#E91E8C] p-1 shadow-sm">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <span
-          key={index}
-          className="flex items-center justify-center rounded-[6px] text-[9px] font-extrabold leading-none text-white"
-        >
-          Mo
-        </span>
-      ))}
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#A50064] shadow-sm">
+      <img src={MOMO_LOGO} alt="MoMo" className="h-full w-full object-cover" />
     </span>
   );
 }
 
 function VNPayLogo() {
   return (
-    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-[#D7E6FF]">
-      <span className="flex flex-col items-start leading-none">
-        <span className="text-[14px] font-black tracking-tight">
-          <span className="text-[#0056B3]">VN</span>
-          <span className="text-[#E5252A]">PAY</span>
-        </span>
-        <span className="mt-0.5 h-1.5 w-8 rounded-full bg-[#10B981]" />
-      </span>
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-[#D7E6FF]">
+      <img src={VNPAY_LOGO} alt="VNPay" className="h-full w-full object-cover" />
     </span>
   );
 }
