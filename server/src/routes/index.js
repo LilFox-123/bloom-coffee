@@ -9,11 +9,13 @@ import staffRoutes from './staffRoutes.js';
 import inventoryRoutes from './inventoryRoutes.js';
 import reportRoutes from './reportRoutes.js';
 import publicRoutes from './publicRoutes.js';
+import paymentRoutes from './paymentRoutes.js';
 
 const router = Router();
 
 router.get('/health', (req, res) => res.json({ success: true, data: { status: 'ok' } }));
 router.use('/public', publicRoutes);
+router.use('/payment', paymentRoutes);
 router.use('/auth', authRoutes);
 router.use('/tables', tableRoutes);
 router.use('/menu', menuRoutes);

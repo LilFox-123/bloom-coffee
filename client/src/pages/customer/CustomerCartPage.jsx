@@ -5,6 +5,13 @@ import { formatVND } from '../../utils/format';
 import { IconTrash } from '../../components/Icons';
 import QuantityStepper from '../../components/customer/QuantityStepper';
 
+const CART_EMOJI = {
+  'Cà phê': '☕',
+  Trà: '🍵',
+  'Nước ép': '🥤',
+  'Đồ ăn nhẹ': '🧁',
+};
+
 function CustomerHeader({ title, onBack, badge }) {
   return (
     <header className="sticky top-0 z-20 bg-[#2C1A0E] h-16 px-4 flex items-center gap-3">
@@ -69,7 +76,16 @@ export default function CustomerCartPage() {
             className={`p-4 ${idx < cart.list.length - 1 ? 'border-b border-[#F3E8D8]' : ''}`}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold text-[#1A0F00] flex-1">{row.menuItem.name}</p>
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-10 h-10 rounded-lg overflow-hidden bg-[#FEF6EC] flex items-center justify-center text-xl shrink-0">
+                  {row.menuItem.imageUrl ? (
+                    <img src={row.menuItem.imageUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    CART_EMOJI[row.menuItem.category] || '🍽️'
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-[#1A0F00]">{row.menuItem.name}</p>
+              </div>
               <button
                 onClick={() => cart.remove(row.menuItem._id)}
                 className="text-[#C62828] p-1"

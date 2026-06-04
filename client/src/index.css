@@ -306,6 +306,45 @@
   }
 }
 
+/* Customer self-order page animations */
+.cust-float {
+  animation: cust-float 3s ease-in-out infinite;
+}
+@keyframes cust-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.cust-ping {
+  animation: cust-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes cust-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.cust-cart-flash {
+  animation: cust-cart-flash 600ms ease;
+}
+@keyframes cust-cart-flash {
+  0%,
+  100% {
+    border-color: #e8d5bc;
+  }
+  50% {
+    border-color: #c8922a;
+  }
+}
+
 /* Print: chỉ hiện nội dung hóa đơn */
 @media print {
   body * {

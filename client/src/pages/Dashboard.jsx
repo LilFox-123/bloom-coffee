@@ -26,7 +26,10 @@ function DashboardHero() {
         <p className="text-primary-bright text-[13px] uppercase tracking-[0.1em] mb-2 animate-fade-up [animation-delay:0.1s] opacity-0">
           Chào mừng trở lại ☕
         </p>
-        <h1 className="font-display italic text-3xl sm:text-[42px] text-page leading-tight mb-2 animate-fade-up [animation-delay:0.2s] opacity-0">
+        <h1
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 700 }}
+          className="font-display italic text-3xl sm:text-[42px] text-page leading-tight mb-2 animate-fade-up [animation-delay:0.2s] opacity-0"
+        >
           Bloom Coffee
         </h1>
         <p className="text-page/60 text-[15px] animate-fade-up [animation-delay:0.3s] opacity-0">
