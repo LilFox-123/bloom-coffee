@@ -52,6 +52,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
   });
 
   // hoàn tất đơn + giải phóng bàn
+  order.paymentStatus = 'paid';
   order.status = 'hoantat';
   await order.save();
   if (table) {

@@ -75,6 +75,9 @@ async function updateOrderPaymentStatus(orderId, paymentStatus) {
   const order = await Order.findById(orderId);
   if (!order) return null;
   order.paymentStatus = paymentStatus;
+  if (paymentStatus === 'paid' && ['moi', 'daxacnhan'].includes(order.status)) {
+    order.status = 'dathanhtoan';
+  }
   await order.save();
   return order;
 }

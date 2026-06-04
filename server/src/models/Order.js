@@ -6,7 +6,11 @@ const orderItemSchema = new mongoose.Schema(
     name: { type: String, required: true }, // snapshot
     price: { type: Number, required: true }, // snapshot, VNĐ
     quantity: { type: Number, required: true, min: 1, default: 1 },
-    status: { type: String, enum: ['dangphache', 'daphucvu'], default: 'dangphache' },
+    status: {
+      type: String,
+      enum: ['dangphache', 'chuanbiphucvu', 'daphucvu'],
+      default: 'dangphache',
+    },
   },
   { _id: true }
 );
@@ -17,7 +21,11 @@ const orderSchema = new mongoose.Schema(
     tableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', default: null },
     staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     source: { type: String, enum: ['staff', 'customer_kiosk', 'customer_online'], default: 'staff' },
-    status: { type: String, enum: ['moi', 'danglam', 'hoantat'], default: 'moi' },
+    status: {
+      type: String,
+      enum: ['moi', 'daxacnhan', 'dathanhtoan', 'danglam', 'dangphache', 'chuanbiphucvu', 'daphucvu', 'hoantat'],
+      default: 'moi',
+    },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
     customerName: { type: String, default: '' },

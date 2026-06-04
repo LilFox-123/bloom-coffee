@@ -8,6 +8,23 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 const CATEGORY_ORDER = ['Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
 
+const ORDER_STATUS_LABELS = {
+  moi: 'Chờ xác nhận',
+  daxacnhan: 'Đã xác nhận đơn',
+  dathanhtoan: 'Đã thanh toán',
+  danglam: 'Đang chuẩn bị',
+  dangphache: 'Đang pha chế',
+  chuanbiphucvu: 'Chuẩn bị phục vụ',
+  daphucvu: 'Đã phục vụ',
+  hoantat: 'Hoàn tất',
+};
+
+const PAYMENT_STATUS_LABELS = {
+  pending: 'Chờ thanh toán',
+  paid: 'Đã thanh toán',
+  failed: 'Thanh toán thất bại',
+};
+
 function normalizePhone(phone) {
   return String(phone || '').replace(/\s+/g, '').trim();
 }
@@ -288,6 +305,9 @@ export const getPublicOrderStatus = asyncHandler(async (req, res) => {
       orderId: order._id,
       tableName: table?.name || '',
       status: order.status,
+      statusLabel: ORDER_STATUS_LABELS[order.status] || 'Đang xử lý',
+      paymentStatus: order.paymentStatus,
+      paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus] || 'Chờ thanh toán',
       items: order.items.map((i) => ({
         name: i.name,
         quantity: i.quantity,

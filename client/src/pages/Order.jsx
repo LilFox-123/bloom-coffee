@@ -15,6 +15,56 @@ const PAYMENTS = [
   { key: 'vidientu', label: 'Ví điện tử' },
 ];
 
+const ORDER_STATUS_META = {
+  moi: { label: 'Chờ xác nhận', color: 'blue' },
+  daxacnhan: { label: 'Đã xác nhận', color: 'green' },
+  dathanhtoan: { label: 'Đã thanh toán', color: 'green' },
+  danglam: { label: 'Đang chuẩn bị', color: 'yellow' },
+  dangphache: { label: 'Đang pha chế', color: 'yellow' },
+  chuanbiphucvu: { label: 'Chuẩn bị phục vụ', color: 'blue' },
+  daphucvu: { label: 'Đã phục vụ', color: 'green' },
+  hoantat: { label: 'Hoàn tất', color: 'green' },
+};
+
+const PAYMENT_STATUS_META = {
+  pending: { label: 'Chờ thanh toán', color: 'yellow' },
+  paid: { label: 'Đã thanh toán', color: 'green' },
+  failed: { label: 'Thanh toán lỗi', color: 'red' },
+};
+
+const ORDER_STATUS_ACTIONS = [
+  { label: 'Xác nhận đơn', payload: { status: 'daxacnhan' } },
+  { label: 'Xác nhận đã thanh toán', payload: { paymentStatus: 'paid' } },
+  { label: 'Đang pha chế', payload: { status: 'dangphache' } },
+  { label: 'Chuẩn bị phục vụ', payload: { status: 'chuanbiphucvu' } },
+  { label: 'Đã phục vụ', payload: { status: 'daphucvu' } },
+];
+
+const ITEM_STATUS_META = {
+  dangphache: { label: 'Đang pha chế', color: 'yellow' },
+  chuanbiphucvu: { label: 'Chuẩn bị phục vụ', color: 'blue' },
+  daphucvu: { label: 'Đã phục vụ', color: 'green' },
+};
+
+function OrderStatusBadge({ status }) {
+  const meta = ORDER_STATUS_META[status] || ORDER_STATUS_META.moi;
+  return <Badge color={meta.color}>{meta.label}</Badge>;
+}
+
+function PaymentStatusBadge({ status }) {
+  const meta = PAYMENT_STATUS_META[status] || PAYMENT_STATUS_META.pending;
+  return <Badge color={meta.color}>{meta.label}</Badge>;
+}
+
+function ItemStatusBadge({ status }) {
+  const meta = ITEM_STATUS_META[status] || ITEM_STATUS_META.dangphache;
+  return (
+    <Badge color={meta.color} className="!text-[10px] !px-2 !py-0.5 mt-1">
+      {meta.label}
+    </Badge>
+  );
+}
+
 function TableSelector() {
   const toast = useToast();
   const navigate = useNavigate();
@@ -136,8 +186,19 @@ function OrderScreen({ tableId }) {
 
   const saveOrder = async () => {
     try {
-      await api.patch(`/orders/${order._id}/save`);
-      toast.success('Đã lưu đơn');
+      const res = await api.patch(`/orders/${order._id}/save`);
+      setOrder(res.data.data);
+      toast.success('Đã xác nhận đơn');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const updateOrderStatus = async (payload, successMessage) => {
+    try {
+      const res = await api.patch(`/orders/${order._id}/status`, payload);
+      setOrder(res.data.data);
+      toast.success(successMessage);
     } catch (err) {
       toast.error(err.message);
     }
@@ -186,9 +247,29 @@ function OrderScreen({ tableId }) {
             </span>
           )}
         </div>
-        <Badge color={order?.status === 'moi' ? 'blue' : 'green'}>
-          {order?.status === 'moi' ? 'Mới' : 'Đang phục vụ'}
-        </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <OrderStatusBadge status={order?.status} />
+          <PaymentStatusBadge status={order?.paymentStatus} />
+        </div>
+      </div>
+
+      <div className="mb-4 rounded-xl border border-brdr bg-page p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+          Cập nhật trạng thái cho khách
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {ORDER_STATUS_ACTIONS.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => updateOrderStatus(action.payload, action.label)}
+              disabled={!order?.items.length}
+              className="min-h-[40px] rounded-lg border border-brdr bg-white px-2 text-xs font-semibold text-text-primary hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto -mx-2 px-2 max-h-[45vh]">
@@ -201,12 +282,7 @@ function OrderScreen({ tableId }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <p className="font-medium text-sm">{i.name}</p>
-                    <Badge
-                      color={i.status === 'daphucvu' ? 'green' : 'yellow'}
-                      className="!text-[10px] !px-2 !py-0.5 mt-1"
-                    >
-                      {i.status === 'daphucvu' ? 'Đã phục vụ' : 'Đang pha chế'}
-                    </Badge>
+                    <ItemStatusBadge status={i.status} />
                   </div>
                   <button className="text-text-muted hover:text-danger" onClick={() => removeItem(i)}>
                     ✕

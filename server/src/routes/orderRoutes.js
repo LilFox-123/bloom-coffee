@@ -7,6 +7,7 @@ import {
   updateItem,
   removeItem,
   saveOrder,
+  updateOrderStatus,
 } from '../controllers/orderController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -24,6 +25,7 @@ router.post(
 );
 router.patch('/:id/items/:itemId', updateItem);
 router.delete('/:id/items/:itemId', removeItem);
+router.patch('/:id/status', updateOrderStatus);
 router.patch('/:id/save', saveOrder);
 
 export default router;

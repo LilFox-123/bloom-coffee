@@ -11,12 +11,17 @@ export default function OnlineSuccessPage() {
   useEffect(() => {
     if (!orderId) return;
     let active = true;
-    api
-      .get(`/public/order/${orderId}/status`)
-      .then((res) => active && setOrder(res.data.data))
-      .catch(() => {});
+    const fetchStatus = () => {
+      api
+        .get(`/public/order/${orderId}/status`)
+        .then((res) => active && setOrder(res.data.data))
+        .catch(() => {});
+    };
+    fetchStatus();
+    const id = setInterval(fetchStatus, 10000);
     return () => {
       active = false;
+      clearInterval(id);
     };
   }, [orderId]);
 
@@ -48,7 +53,11 @@ export default function OnlineSuccessPage() {
         ) : null}
         <div className="flex justify-between">
           <span className="text-[#9C8472]">Trạng thái</span>
-          <span className="text-[#1A0A00] font-medium">Chờ xử lý</span>
+          <span className="text-[#1A0A00] font-medium">{order?.statusLabel || 'Chờ xử lý'}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[#9C8472]">Thanh toán</span>
+          <span className="text-[#1A0A00] font-medium">{order?.paymentStatusLabel || 'Chờ thanh toán'}</span>
         </div>
       </div>
 
