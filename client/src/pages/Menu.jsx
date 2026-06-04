@@ -23,6 +23,8 @@ export default function Menu() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [confirm, setConfirm] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   const load = async () => {
     try {
@@ -38,17 +40,32 @@ export default function Menu() {
     load();
   }, []);
 
+  const resetImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+  };
+
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
     setErrors({});
+    resetImage();
     setModal(true);
   };
   const openEdit = (m) => {
     setEditing(m);
     setForm({ name: m.name, category: m.category, price: m.price, description: m.description, imageUrl: m.imageUrl || '', isAvailable: m.isAvailable });
     setErrors({});
+    resetImage();
     setModal(true);
+  };
+
+  const onPickImage = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(f);
+    setImagePreview(URL.createObjectURL(f));
   };
 
   const submit = async (e) => {
@@ -58,16 +75,26 @@ export default function Menu() {
     if (form.price === '' || Number(form.price) < 0) errs.price = 'Giá không hợp lệ';
     setErrors(errs);
     if (Object.keys(errs).length) return;
-    const payload = { ...form, price: Number(form.price) };
+
+    const fd = new FormData();
+    fd.append('name', form.name.trim());
+    fd.append('category', form.category);
+    fd.append('price', String(Number(form.price)));
+    fd.append('description', form.description || '');
+    fd.append('imageUrl', form.imageUrl || '');
+    fd.append('isAvailable', form.isAvailable ? 'true' : 'false');
+    if (imageFile) fd.append('image', imageFile);
+
     try {
       if (editing) {
-        await api.patch(`/menu/${editing._id}`, payload);
+        await api.patch(`/menu/${editing._id}`, fd);
         toast.success('Đã cập nhật món');
       } else {
-        await api.post('/menu', payload);
+        await api.post('/menu', fd);
         toast.success('Đã thêm món mới');
       }
       setModal(false);
+      resetImage();
       load();
     } catch (err) {
       toast.error(err.message);
@@ -153,8 +180,12 @@ export default function Menu() {
               {m.imageUrl ? (
                 <img src={m.imageUrl} alt={m.name} className="menu-card-img w-full aspect-[4/3] object-cover block" />
               ) : (
-                <div className="w-full aspect-[4/3] flex items-center justify-center text-[40px] bg-gradient-to-br from-[#EDE0CC] to-[#D4B896]">
-                  ☕
+                <div className="w-full aspect-[4/3] flex items-center justify-center bg-gradient-to-br from-[#2A241C] to-[#1A0A00]">
+                  <svg viewBox="0 0 48 48" width="46" height="46" fill="none" className="text-primary">
+                    <path d="M14 20h16v8a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6v-8z" fill="currentColor" opacity="0.92" />
+                    <path d="M30 21h3.5a3.5 3.5 0 0 1 0 7H30" stroke="currentColor" strokeWidth="2" />
+                    <path d="M18 14c1-1.4 1-2.8 0-4.2M24 14c1-1.4 1-2.8 0-4.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
+                  </svg>
                 </div>
               )}
               <div className="p-4">
@@ -192,7 +223,7 @@ export default function Menu() {
       )}
 
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Sửa món' : 'Thêm món mới'}>
-        <form onSubmit={submit} className="space-y-4" noValidate>
+        <form onSubmit={submit} className="space-y-4" noValidate encType="multipart/form-data">
           <div>
             <label className="label">Tên món</label>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -218,8 +249,38 @@ export default function Menu() {
             <input className="input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div>
-            <label className="label">Ảnh món (URL, không bắt buộc)</label>
-            <input className="input" placeholder="https://..." value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+            <label className="label">Ảnh món</label>
+            <div className="flex items-start gap-4">
+              <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-[#2A241C] flex items-center justify-center shrink-0 border border-brdr">
+                {imagePreview || form.imageUrl ? (
+                  <img
+                    src={imagePreview || form.imageUrl}
+                    alt="preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" className="text-primary">
+                    <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="1.6" />
+                    <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={onPickImage}
+                  className="block w-full text-sm text-text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#1A0A00] hover:file:bg-primary-hover file:cursor-pointer"
+                />
+                <p className="text-xs text-text-muted">JPG, PNG hoặc WEBP · tối đa 5MB</p>
+                <input
+                  className="input"
+                  placeholder="hoặc dán URL ảnh: https://..."
+                  value={form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                />
+              </div>
+            </div>
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} />

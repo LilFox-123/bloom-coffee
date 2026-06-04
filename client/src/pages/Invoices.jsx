@@ -125,7 +125,16 @@ export default function Invoices() {
               <tbody>
                 {invoices.map((inv, idx) => (
                   <tr key={inv._id} className={`border-b border-brdr hover:bg-muted ${idx % 2 ? 'bg-muted/40' : ''}`}>
-                    <td className="px-4 py-3 font-medium">{inv.code}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{inv.code}</span>
+                        {inv.source === 'customer_online' && (
+                          <span className="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-[#E3F2FD] text-[#1565C0]">
+                            Online
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">{inv.tableName}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{inv.staffName}</td>
                     <td className="px-4 py-3 text-center hidden sm:table-cell">{inv.items.length}</td>

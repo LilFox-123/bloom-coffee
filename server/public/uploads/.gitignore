@@ -1,0 +1,6 @@
+# Keep the uploads folder in the repo, ignore uploaded files (ephemeral on Render)
+*
+!.gitignore
+!menu/
+menu/*
+!menu/.gitkeep

@@ -4,6 +4,7 @@ import {
   getPublicTable,
   getPublicMenu,
   createPublicOrder,
+  createOnlineOrder,
   getPublicOrderStatus,
 } from '../controllers/publicController.js';
 import { validate } from '../middleware/validate.js';
@@ -23,6 +24,17 @@ router.post(
   ],
   validate,
   createPublicOrder
+);
+router.post(
+  '/online-order',
+  [
+    body('customerName').notEmpty().withMessage('Vui lòng nhập tên của bạn'),
+    body('items').isArray({ min: 1 }).withMessage('Giỏ hàng đang trống'),
+    body('items.*.menuItemId').notEmpty().withMessage('Món không hợp lệ'),
+    body('items.*.quantity').isInt({ min: 1 }).withMessage('Số lượng phải lớn hơn 0'),
+  ],
+  validate,
+  createOnlineOrder
 );
 router.get('/order/:orderId/status', getPublicOrderStatus);
 

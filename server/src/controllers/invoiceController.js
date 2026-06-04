@@ -47,6 +47,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
     vat,
     total,
     paymentMethod,
+    source: order.source || 'staff',
   });
 
   // hoàn tất đơn + giải phóng bàn

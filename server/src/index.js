@@ -25,6 +25,9 @@ app.use(
   })
 );
 
+// Phục vụ ảnh upload (menu, ...) — đặt trước catch-all của client
+app.use('/uploads', express.static(path.resolve(__dirname, '../public/uploads')));
+
 app.use('/api', apiRoutes);
 
 // Phục vụ client đã build ở production

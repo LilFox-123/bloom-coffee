@@ -180,6 +180,11 @@ function OrderScreen({ tableId }) {
               KH tự đặt
             </span>
           )}
+          {order?.source === 'customer_online' && (
+            <span className="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-[#E3F2FD] text-[#1565C0]">
+              Online
+            </span>
+          )}
         </div>
         <Badge color={order?.status === 'moi' ? 'blue' : 'green'}>
           {order?.status === 'moi' ? 'Mới' : 'Đang phục vụ'}

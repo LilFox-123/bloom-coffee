@@ -28,6 +28,8 @@ const invoiceSchema = new mongoose.Schema(
       enum: ['tienmat', 'chuyenkhoan', 'vidientu'],
       default: 'tienmat',
     },
+    // carried over from the originating order (staff / customer_kiosk / customer_online)
+    source: { type: String, default: 'staff' },
   },
   { timestamps: true }
 );

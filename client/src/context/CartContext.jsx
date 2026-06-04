@@ -8,6 +8,7 @@ export function CartProvider({ children }) {
   const [notes, setNotes] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('tienmat');
+  const [tableNumber, setTableNumber] = useState('');
 
   const add = useCallback((menuItem) => {
     setItems((prev) => {
@@ -82,6 +83,8 @@ export function CartProvider({ children }) {
     setCustomerName,
     paymentMethod,
     setPaymentMethod,
+    tableNumber,
+    setTableNumber,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

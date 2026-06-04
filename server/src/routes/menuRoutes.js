@@ -8,6 +8,7 @@ import {
 } from '../controllers/menuController.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { menuImageUpload } from '../middleware/upload.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -16,6 +17,7 @@ router.get('/', listMenu);
 router.post(
   '/',
   requireAdmin,
+  menuImageUpload, // parses multipart/form-data → populates req.body + req.file
   [
     body('name').notEmpty().withMessage('Vui lòng nhập tên món'),
     body('category').notEmpty().withMessage('Vui lòng chọn danh mục'),
@@ -24,7 +26,7 @@ router.post(
   validate,
   createMenuItem
 );
-router.patch('/:id', requireAdmin, updateMenuItem);
+router.patch('/:id', requireAdmin, menuImageUpload, updateMenuItem);
 router.delete('/:id', requireAdmin, deleteMenuItem);
 
 export default router;

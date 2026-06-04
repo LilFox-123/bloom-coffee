@@ -13,10 +13,13 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
-    tableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', required: true },
+    // optional: online orders may not be tied to a physical table
+    tableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', default: null },
     staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    source: { type: String, enum: ['staff', 'customer_kiosk'], default: 'staff' },
+    source: { type: String, enum: ['staff', 'customer_kiosk', 'customer_online'], default: 'staff' },
     status: { type: String, enum: ['moi', 'danglam', 'hoantat'], default: 'moi' },
+    customerName: { type: String, default: '' },
+    note: { type: String, default: '' },
     items: { type: [orderItemSchema], default: [] },
   },
   { timestamps: true }

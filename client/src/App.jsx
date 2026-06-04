@@ -20,6 +20,11 @@ import CustomerCartPage from './pages/customer/CustomerCartPage';
 import CustomerConfirmPage from './pages/customer/CustomerConfirmPage';
 import CustomerSuccessPage from './pages/customer/CustomerSuccessPage';
 
+import OnlineLayout from './pages/customer/online/OnlineLayout';
+import OnlineMenuPage from './pages/customer/online/OnlineMenuPage';
+import OnlineConfirmPage from './pages/customer/online/OnlineConfirmPage';
+import OnlineSuccessPage from './pages/customer/online/OnlineSuccessPage';
+
 function HomeRedirect() {
   const { user } = useAuth();
   return <Navigate to={user?.role === 'admin' ? '/dashboard' : '/ban'} replace />;
@@ -30,7 +35,15 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      {/* Public customer self-order flow (no auth) */}
+      {/* Public single-link online ordering (no auth, no table required).
+          Static paths rank above the dynamic /order/:tableId below. */}
+      <Route element={<OnlineLayout />}>
+        <Route path="/order" element={<OnlineMenuPage />} />
+        <Route path="/order/confirm" element={<OnlineConfirmPage />} />
+        <Route path="/order/success" element={<OnlineSuccessPage />} />
+      </Route>
+
+      {/* Public QR self-order flow (no auth, table-specific) */}
       <Route element={<CustomerLayout />}>
         <Route path="/order/:tableId" element={<CustomerMenuPage />} />
         <Route path="/order/:tableId/cart" element={<CustomerCartPage />} />

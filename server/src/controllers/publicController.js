@@ -140,6 +140,75 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/public/online-order
+// Single public link flow (no table required). Optional "số bàn" 1–20 maps to
+// an existing "Bàn N" table when present.
+export const createOnlineOrder = asyncHandler(async (req, res) => {
+  const { customerName, tableNumber, note, items } = req.body;
+
+  if (!customerName || !String(customerName).trim()) {
+    return res.status(400).json({ success: false, message: 'Vui lòng nhập tên của bạn' });
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ success: false, message: 'Giỏ hàng đang trống' });
+  }
+
+  // snapshot menu items
+  const ids = items.map((i) => i.menuItemId).filter((id) => mongoose.isValidObjectId(id));
+  const menuDocs = await MenuItem.find({ _id: { $in: ids } });
+  const menuMap = new Map(menuDocs.map((m) => [String(m._id), m]));
+
+  const orderItems = [];
+  for (const line of items) {
+    const m = menuMap.get(String(line.menuItemId));
+    const qty = Number(line.quantity);
+    if (!m) return res.status(400).json({ success: false, message: 'Món không hợp lệ trong đơn hàng' });
+    if (!Number.isFinite(qty) || qty < 1) {
+      return res.status(400).json({ success: false, message: 'Số lượng không hợp lệ' });
+    }
+    orderItems.push({ menuItemId: m._id, name: m.name, price: m.price, quantity: qty, status: 'dangphache' });
+  }
+
+  // optional table mapping
+  let table = null;
+  if (tableNumber) {
+    table = await Table.findOne({ name: `Bàn ${tableNumber}` });
+  }
+
+  const fallbackStaff = (await User.findOne({ role: 'admin' })) || (await User.findOne());
+  if (!fallbackStaff) {
+    return res.status(500).json({ success: false, message: 'Hệ thống chưa sẵn sàng nhận đơn' });
+  }
+
+  const order = await Order.create({
+    tableId: table?._id || null,
+    staffId: fallbackStaff._id,
+    source: 'customer_online',
+    status: 'moi',
+    customerName: String(customerName).trim(),
+    note: note ? String(note).trim() : '',
+    items: orderItems,
+  });
+
+  // mark mapped table as occupied (if any)
+  if (table && table.status === 'trong') {
+    table.status = 'dangdung';
+    table.currentOrderId = order._id;
+    table.occupiedAt = new Date();
+    table.guests = table.guests || 1;
+    await table.save();
+  }
+
+  res.status(201).json({
+    success: true,
+    data: {
+      orderId: order._id,
+      tableName: table?.name || '',
+      estimatedWait: 15,
+    },
+  });
+});
+
 // GET /api/public/order/:orderId/status
 export const getPublicOrderStatus = asyncHandler(async (req, res) => {
   const { orderId } = req.params;
