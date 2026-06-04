@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { useCart } from '../../context/CartContext';
@@ -20,12 +20,48 @@ const BASE_METHODS = [
   { id: 'chuyenkhoan', icon: '🏦', title: 'Chuyển khoản', desc: 'Quét mã VietQR thanh toán' },
 ];
 
-function EWalletMethodCard({ type, icon, title, desc, selected, onSelect }) {
+const PROMO_CODES = {
+  BLOOM10: { label: 'Giảm 10%', type: 'percent', value: 0.1, max: 30000 },
+  COMBO15: { label: 'Giảm 15.000 đ', type: 'fixed', value: 15000 },
+  CROISSANT: { label: 'Giảm 5%', type: 'percent', value: 0.05, max: 20000 },
+};
+
+const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
+
+function MoMoLogo() {
+  return (
+    <span className="grid h-12 w-12 shrink-0 grid-cols-2 overflow-hidden rounded-xl bg-[#E91E8C] p-1 shadow-sm">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <span
+          key={index}
+          className="flex items-center justify-center rounded-[6px] text-[9px] font-extrabold leading-none text-white"
+        >
+          Mo
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function VNPayLogo() {
+  return (
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-[#D7E6FF]">
+      <span className="flex flex-col items-start leading-none">
+        <span className="text-[14px] font-black tracking-tight">
+          <span className="text-[#0056B3]">VN</span>
+          <span className="text-[#E5252A]">PAY</span>
+        </span>
+        <span className="mt-0.5 h-1.5 w-8 rounded-full bg-[#10B981]" />
+      </span>
+    </span>
+  );
+}
+
+function EWalletMethodCard({ type, title, desc, selected, onSelect }) {
   const selectedClasses =
     type === 'momo'
       ? 'border-[#E91E8C] bg-[#FDEBF5]'
       : 'border-[#0056B3] bg-[#EAF3FF]';
-  const iconClasses = type === 'momo' ? 'bg-[#E91E8C]' : 'bg-[#0056B3]';
   const dotClasses = type === 'momo' ? 'border-[#E91E8C]' : 'border-[#0056B3]';
   const dotFill = type === 'momo' ? 'bg-[#E91E8C]' : 'bg-[#0056B3]';
 
@@ -37,11 +73,7 @@ function EWalletMethodCard({ type, icon, title, desc, selected, onSelect }) {
         selected ? selectedClasses : 'border-[#E3D3C4] bg-white'
       }`}
     >
-      <span
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-white ${iconClasses}`}
-      >
-        {icon}
-      </span>
+      {type === 'momo' ? <MoMoLogo /> : <VNPayLogo />}
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-[#3B2314]">{title}</p>
         <p className="mt-0.5 text-xs text-[#8A6F5D]">{desc}</p>
@@ -57,6 +89,55 @@ function EWalletMethodCard({ type, icon, title, desc, selected, onSelect }) {
   );
 }
 
+function getDiscountAmount(promo, total) {
+  if (!promo) return 0;
+  if (promo.type === 'fixed') return Math.min(promo.value, total);
+  return Math.min(Math.round(total * promo.value), promo.max || total);
+}
+
+function isSnack(item) {
+  const haystack = `${item.category || ''} ${item.name || ''}`.toLowerCase();
+  return (
+    haystack.includes('đồ ăn') ||
+    haystack.includes('ăn nhẹ') ||
+    haystack.includes('bánh') ||
+    haystack.includes('croissant')
+  );
+}
+
+function RecommendationCard({ item, onAdd }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [item.imageUrl]);
+
+  return (
+    <div className="flex min-w-[220px] items-center gap-3 rounded-2xl border border-[#E3D3C4] bg-white p-3 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+      <img
+        src={!imageFailed && item.imageUrl ? item.imageUrl : PLACEHOLDER_IMAGE}
+        alt={item.name}
+        onError={() => setImageFailed(true)}
+        className="h-16 w-16 shrink-0 rounded-xl object-cover"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-1 text-sm font-bold text-[#3B2314]">{item.name}</p>
+        <p className="mt-0.5 text-xs text-[#8A6F5D]">
+          {isSnack(item) ? 'Mua kèm rất hợp với nước uống' : 'Gợi ý thêm cho đơn này'}
+        </p>
+        <p className="mt-1 text-sm font-bold text-[#C89B3C]">{formatVND(item.price)}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="min-h-[44px] rounded-xl bg-[#C89B3C] px-3 text-sm font-bold text-white"
+      >
+        Thêm
+      </button>
+    </div>
+  );
+}
+
 export default function CustomerConfirmPage() {
   const { tableId } = useParams();
   const navigate = useNavigate();
@@ -65,29 +146,89 @@ export default function CustomerConfirmPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState('');
+  const [promoMessage, setPromoMessage] = useState('');
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    api
+      .get('/public/menu')
+      .then((res) => {
+        if (active) setCategories(res.data.data.categories || []);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const method = cart.paymentMethod;
+  const cartTotal = cart.total;
+  const appliedPromo = appliedPromoCode ? PROMO_CODES[appliedPromoCode] : null;
+  const discountAmount = getDiscountAmount(appliedPromo, cartTotal);
+  const payableTotal = Math.max(cartTotal - discountAmount, 0);
+  const orderId = null; // order is created on submit; QR uses a generic addInfo until then
+  const momoError = method === 'momo' && error.includes('MoMo');
+  const vnpayError = method === 'vnpay' && error.includes('VNPay');
+  const generalError = error && !error.includes('MoMo') && !error.includes('VNPay');
+  const allMenuItems = useMemo(
+    () => categories.flatMap((c) => c.items.map((i) => ({ ...i, category: c.name }))),
+    [categories]
+  );
+  const recommendationItems = useMemo(() => {
+    const cartIds = new Set(cart.list.map((row) => row.menuItem._id));
+    const hasDrink = cart.list.some((row) => !isSnack(row.menuItem));
+    const pool = allMenuItems.filter((item) => !cartIds.has(item._id));
+    const preferred = pool.filter((item) => (hasDrink ? isSnack(item) : !isSnack(item)));
+    return (preferred.length ? preferred : pool).slice(0, 3);
+  }, [allMenuItems, cart.list]);
 
   if (cart.list.length === 0) {
     navigate(`/order/${tableId}`, { replace: true });
     return null;
   }
 
-  const method = cart.paymentMethod;
-  const cartTotal = cart.total;
-  const orderId = null; // order is created on submit; QR uses a generic addInfo until then
-  const momoError = method === 'momo' && error.includes('MoMo');
-  const vnpayError = method === 'vnpay' && error.includes('VNPay');
-  const generalError = error && !error.includes('MoMo') && !error.includes('VNPay');
-
   const selectPaymentMethod = (id) => {
     cart.setPaymentMethod(id);
     setError('');
   };
 
+  const applyPromo = () => {
+    const code = promoInput.trim().toUpperCase();
+    const promo = PROMO_CODES[code];
+    if (!promo) {
+      setAppliedPromoCode('');
+      setPromoMessage('Mã khuyến mãi không hợp lệ');
+      return;
+    }
+
+    const discount = getDiscountAmount(promo, cartTotal);
+    if (discount <= 0) {
+      setAppliedPromoCode('');
+      setPromoMessage('Mã khuyến mãi chưa thể áp dụng cho đơn này');
+      return;
+    }
+
+    setAppliedPromoCode(code);
+    setPromoInput(code);
+    setPromoMessage(`Đã áp dụng ${code} - ${promo.label}`);
+  };
+
+  const removePromo = () => {
+    setAppliedPromoCode('');
+    setPromoInput('');
+    setPromoMessage('');
+  };
+
   const createOrder = async () => {
+    const promoNote = appliedPromoCode ? `Mã khuyến mãi: ${appliedPromoCode}` : '';
+    const notes = [cart.notes, promoNote].filter(Boolean).join(' | ');
     const res = await api.post('/public/order', {
       tableId,
       customerName: cart.customerName || undefined,
-      notes: cart.notes || undefined,
+      notes: notes || undefined,
       paymentMethod: method,
       items: cart.list.map((r) => ({ menuItemId: r.menuItem._id, quantity: r.quantity })),
     });
@@ -104,7 +245,7 @@ export default function CustomerConfirmPage() {
         const successUrl = `${window.location.origin}/order/${tableId}/success/${newOrderId}`;
         const endpoint = method === 'momo' ? '/payment/momo' : '/payment/vnpay';
         const payRes = await api.post(endpoint, {
-          amount: cartTotal,
+          amount: payableTotal,
           orderInfo: `Bloom Coffee - ${table.tableName}`,
           orderId: newOrderId,
           redirectUrl: successUrl,
@@ -144,7 +285,7 @@ export default function CustomerConfirmPage() {
 
   const vietQrSrc =
     `https://img.vietqr.io/image/${BANK_CONFIG.bankId}-${BANK_CONFIG.accountNumber}-${BANK_CONFIG.template}.png` +
-    `?amount=${cartTotal}&addInfo=BLOOM${orderId || 'ORDER'}&accountName=${encodeURIComponent(BANK_CONFIG.accountName)}`;
+    `?amount=${payableTotal}&addInfo=BLOOM${orderId || 'ORDER'}&accountName=${encodeURIComponent(BANK_CONFIG.accountName)}`;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FAF6F1] pb-6 text-[#3B2314]">
@@ -175,6 +316,61 @@ export default function CustomerConfirmPage() {
           <span className="font-semibold text-[#3B2314]">Tổng cộng</span>
           <span className="text-lg font-bold text-[#C89B3C]">{formatVND(cartTotal)}</span>
         </div>
+        {discountAmount > 0 && (
+          <>
+            <div className="mt-2 flex items-center justify-between text-sm">
+              <span className="text-[#5A4232]">Khuyến mãi</span>
+              <span className="font-semibold text-[#10B981]">- {formatVND(discountAmount)}</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between rounded-xl bg-[#FFF8EF] px-3 py-2">
+              <span className="font-semibold text-[#3B2314]">Cần thanh toán</span>
+              <span className="text-lg font-extrabold text-[#C89B3C]">{formatVND(payableTotal)}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* promo code */}
+      <div className="mt-5 px-4">
+        <label className="mb-1.5 block text-sm font-medium text-[#5A4232]">Mã khuyến mãi</label>
+        <div className="flex gap-2">
+          <input
+            value={promoInput}
+            onChange={(e) => {
+              setPromoInput(e.target.value);
+              setPromoMessage('');
+              if (appliedPromoCode) setAppliedPromoCode('');
+            }}
+            placeholder="Nhập mã BLOOM10, COMBO15..."
+            className="min-h-[44px] min-w-0 flex-1 rounded-xl border border-[#E3D3C4] bg-white px-4 py-3 text-sm uppercase outline-none placeholder:normal-case placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
+          />
+          {appliedPromoCode ? (
+            <button
+              type="button"
+              onClick={removePromo}
+              className="min-h-[44px] rounded-xl border border-[#E3D3C4] bg-white px-4 text-sm font-bold text-[#5A4232]"
+            >
+              Bỏ
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={applyPromo}
+              className="min-h-[44px] rounded-xl bg-[#3B2314] px-4 text-sm font-bold text-white"
+            >
+              Áp dụng
+            </button>
+          )}
+        </div>
+        {promoMessage && (
+          <p
+            className={`mt-2 text-sm font-medium ${
+              appliedPromoCode ? 'text-[#0F8A4B]' : 'text-[#C62828]'
+            }`}
+          >
+            {promoMessage}
+          </p>
+        )}
       </div>
 
       {/* customer name */}
@@ -189,6 +385,23 @@ export default function CustomerConfirmPage() {
           className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
         />
       </div>
+
+      {/* recommendations */}
+      {recommendationItems.length > 0 && (
+        <div className="mt-5 px-4">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold text-[#3B2314]">Gợi ý dùng thêm</p>
+            <span className="rounded-full bg-[#FFF3D8] px-3 py-1 text-xs font-bold text-[#C89B3C]">
+              Combo ngon hơn
+            </span>
+          </div>
+          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {recommendationItems.map((item) => (
+              <RecommendationCard key={item._id} item={item} onAdd={() => cart.add(item)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* payment method */}
       <div className="mt-5 px-4">
@@ -230,7 +443,7 @@ export default function CustomerConfirmPage() {
             <p className="text-xs text-[#8A6F5D]">
               Chủ TK: <span className="font-semibold text-[#5A4232]">{BANK_CONFIG.accountName}</span>
             </p>
-            <p className="mt-2 text-sm font-bold text-[#C89B3C]">{cartTotal.toLocaleString('vi-VN')} ₫</p>
+            <p className="mt-2 text-sm font-bold text-[#C89B3C]">{payableTotal.toLocaleString('vi-VN')} ₫</p>
           </div>
           <p className="text-center text-xs text-[#8A6F5D]">
             Sau khi chuyển khoản, bấm "Xác nhận đã thanh toán" bên dưới
@@ -244,7 +457,6 @@ export default function CustomerConfirmPage() {
           <div>
             <EWalletMethodCard
               type="momo"
-              icon="M"
               title="Thanh toán qua MoMo"
               desc="Chuyển hướng đến app MoMo"
               selected={method === 'momo'}
@@ -256,7 +468,6 @@ export default function CustomerConfirmPage() {
           <div>
             <EWalletMethodCard
               type="vnpay"
-              icon="VN"
               title="Thanh toán qua VNPay"
               desc="ATM, Visa, Mastercard, QR Code"
               selected={method === 'vnpay'}
