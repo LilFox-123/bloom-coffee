@@ -24,6 +24,7 @@ const CATEGORY_IMAGES = {
   'Nước ép': '/images/menu/juice-glass.svg',
   'Đồ ăn nhẹ': '/images/menu/snack-plate.svg',
 };
+const PROMO_BANNER_IMAGE = '/images/menu/menu-promo-banner.svg';
 
 const CATEGORY_META = {
   'Cà phê': { icon: '☕', tint: 'from-[#5A2E19] to-[#C89B3C]' },
@@ -49,9 +50,9 @@ function filterByPrice(item, priceFilter) {
 
 function MetricPill({ label, value }) {
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur">
+    <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2.5 text-white shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur">
       <p className="text-xs font-semibold text-white/70">{label}</p>
-      <p className="mt-1 text-xl font-black">{value}</p>
+      <p className="mt-0.5 text-lg font-black">{value}</p>
     </div>
   );
 }
@@ -63,17 +64,17 @@ function MenuHero({ items, onAdd, showAdd }) {
   const featured = items.find((i) => i.imageUrl) || items[0];
 
   return (
-    <section className="relative mb-6 overflow-hidden rounded-[28px] bg-[#3B2314] p-6 text-white shadow-[0_18px_45px_rgba(59,35,20,0.18)]">
+    <section className="relative mb-5 overflow-hidden rounded-[26px] bg-[#3B2314] p-4 text-white shadow-[0_16px_38px_rgba(59,35,20,0.16)]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_15%,rgba(200,155,60,0.30),transparent_28%),linear-gradient(135deg,#3B2314_0%,#1E1009_58%,#C89B3C_135%)]" />
       <div className="absolute -right-10 -top-16 h-56 w-56 rounded-full bg-[#C89B3C]/25 blur-3xl" />
-      <div className="relative grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="flex flex-col justify-between gap-6">
+      <div className="relative grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="flex min-h-[260px] flex-col justify-between gap-4 px-1 py-2">
           <div>
-            <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#F9E6B8]">
+            <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-[#F9E6B8]">
               Bloom Coffee Menu
             </span>
-            <h1 className="mt-4 text-4xl font-black leading-tight text-white xl:text-5xl">Thực đơn hôm nay</h1>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-white/78">
+            <h1 className="mt-3 text-3xl font-black leading-tight text-white xl:text-4xl">Thực đơn hôm nay</h1>
+            <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-white/78">
               Quản lý món, hình ảnh, giá bán và trạng thái phục vụ trong một giao diện trực quan hơn.
             </p>
           </div>
@@ -84,20 +85,21 @@ function MenuHero({ items, onAdd, showAdd }) {
           </div>
         </div>
 
-        <div className="relative min-h-[250px] overflow-hidden rounded-[24px] border border-white/15 bg-white/10">
+        <div className="relative h-[260px] overflow-hidden rounded-[24px] border border-white/15 bg-white/10 xl:h-[300px]">
           <img
-            src={featured ? getImage(featured) : fallbackImage('Cà phê')}
-            alt=""
-            className="h-full min-h-[250px] w-full object-cover"
+            src={PROMO_BANNER_IMAGE}
+            alt="Bloom Coffee promotion"
+            className="absolute inset-0 h-full w-full object-cover"
             onError={(e) => {
               e.currentTarget.src = fallbackImage(featured?.category || 'Cà phê');
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1D0F08]/75 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1D0F08]/58 via-transparent to-[#1D0F08]/10" />
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#F9E6B8]">Món nổi bật</p>
-              <p className="mt-1 text-2xl font-black">{featured?.name || 'Bloom Coffee'}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#F9E6B8]">Ảnh quảng cáo</p>
+              <p className="mt-1 text-2xl font-black">Combo đồ uống & bánh</p>
+              {featured && <p className="mt-1 text-xs font-bold text-white/78">Món nổi bật: {featured.name}</p>}
             </div>
             {showAdd && (
               <button className="btn-primary shrink-0" onClick={onAdd}>
