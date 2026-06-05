@@ -33,8 +33,8 @@ const MEMBER_TIER_STYLES = {
 };
 
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
-const MOMO_LOGO = '/images/payment/momo-logo.svg';
-const VNPAY_LOGO = '/images/payment/vnpay-logo.svg';
+const MOMO_LOGO = '/images/payment/MOMO-Logo-App-6262c3743a290ef02396a24ea2b66c35.png';
+const VNPAY_LOGO = '/images/payment/images.png';
 
 function MoMoLogo() {
   return (
@@ -47,7 +47,7 @@ function MoMoLogo() {
 function VNPayLogo() {
   return (
     <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-[#D7E6FF]">
-      <img src={VNPAY_LOGO} alt="VNPay" className="h-full w-full object-cover" />
+      <img src={VNPAY_LOGO} alt="VNPay" className="h-full w-full object-contain p-1.5" />
     </span>
   );
 }
