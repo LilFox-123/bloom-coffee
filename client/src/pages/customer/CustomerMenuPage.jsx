@@ -8,20 +8,19 @@ import Logo from '../../components/Logo';
 import { IconCart } from '../../components/Icons';
 
 const TABS = ['Tất cả', 'Cà phê', 'Trà', 'Nước ép', 'Đồ ăn nhẹ'];
+const GOLDEN_HOUR_PROMO = '/images/menu/golden-hour-promo.png';
 
 const SLIDES = [
   {
-    bg: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85',
-    product:
-      'https://images.unsplash.com/photo-1515823064-d6e0c04616a7?auto=format&fit=crop&w=720&q=85',
-    accent:
-      'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=420&q=80',
-    productAlt: 'Matcha Latte Nhật Bản',
+    bg: GOLDEN_HOUR_PROMO,
+    product: GOLDEN_HOUR_PROMO,
+    accent: GOLDEN_HOUR_PROMO,
+    productAlt: 'Giờ vàng đồng giá Bloom Coffee',
     fallbackColor: '#3B2314',
-    badge: { text: 'MỚI HÔM NAY', cls: 'bg-[#C89B3C] text-white' },
-    heading: ['Matcha Latte', 'Nhật Bản'],
-    sub: 'Vị matcha nguyên chất từ Uji, béo nhẹ và thơm mịn',
-    cta: 'Thử ngay',
+    badge: { text: 'GIỜ VÀNG', cls: 'bg-[#C89B3C] text-white' },
+    heading: ['Đồng giá', '19k'],
+    sub: '13h - 17h từ T2 - T6, áp dụng cho Cafe và Cafe sữa đá',
+    cta: 'Xem ưu đãi',
   },
   {
     bg: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=85',
@@ -53,9 +52,9 @@ const SLIDES = [
 
 const PROMO_CAMPAIGNS = [
   {
-    title: 'Combo sáng tỉnh táo',
-    desc: 'Cà phê + bánh ngọt, tiết kiệm hơn khi gọi cùng nhau',
-    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=520&q=80',
+    title: 'Giờ vàng đồng giá',
+    desc: '13h - 17h từ T2 - T6, Cafe và Cafe sữa đá chỉ 19k',
+    image: GOLDEN_HOUR_PROMO,
     tone: 'from-[#3B2314]/95 to-[#3B2314]/35',
   },
   {

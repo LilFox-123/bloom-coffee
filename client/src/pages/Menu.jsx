@@ -24,7 +24,7 @@ const CATEGORY_IMAGES = {
   'Nước ép': '/images/menu/juice-glass.svg',
   'Đồ ăn nhẹ': '/images/menu/snack-plate.svg',
 };
-const PROMO_BANNER_IMAGE = '/images/menu/menu-promo-banner.svg';
+const PROMO_BANNER_IMAGE = '/images/menu/golden-hour-promo.png';
 
 const CATEGORY_META = {
   'Cà phê': { icon: '☕', tint: 'from-[#5A2E19] to-[#C89B3C]' },
@@ -98,7 +98,7 @@ function MenuHero({ items, onAdd, showAdd }) {
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#F9E6B8]">Ảnh quảng cáo</p>
-              <p className="mt-1 text-2xl font-black">Combo đồ uống & bánh</p>
+              <p className="mt-1 text-2xl font-black">Giờ vàng đồng giá</p>
               {featured && <p className="mt-1 text-xs font-bold text-white/78">Món nổi bật: {featured.name}</p>}
             </div>
             {showAdd && (
