@@ -89,18 +89,12 @@ function MenuHero({ items, onAdd, showAdd }) {
           <img
             src={PROMO_BANNER_IMAGE}
             alt="Bloom Coffee promotion"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-center"
             onError={(e) => {
               e.currentTarget.src = fallbackImage(featured?.category || 'Cà phê');
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1D0F08]/58 via-transparent to-[#1D0F08]/10" />
-          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#F9E6B8]">Ảnh quảng cáo</p>
-              <p className="mt-1 text-2xl font-black">Giờ vàng đồng giá</p>
-              {featured && <p className="mt-1 text-xs font-bold text-white/78">Món nổi bật: {featured.name}</p>}
-            </div>
+          <div className="absolute bottom-4 right-4 flex items-end justify-end">
             {showAdd && (
               <button className="btn-primary shrink-0" onClick={onAdd}>
                 <IconPlus width={18} height={18} /> Thêm món
