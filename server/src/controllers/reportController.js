@@ -5,18 +5,32 @@ import InventoryItem from '../models/InventoryItem.js';
 import InventoryTransaction from '../models/InventoryTransaction.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function startOfVietnamDay(base = new Date()) {
+  const vnDate = new Date(base.getTime() + VN_OFFSET_MS);
+  return new Date(Date.UTC(vnDate.getUTCFullYear(), vnDate.getUTCMonth(), vnDate.getUTCDate()) - VN_OFFSET_MS);
 }
+
+function addDays(date, days) {
+  return new Date(date.getTime() + days * DAY_MS);
+}
+
 function daysAgo(n) {
-  const d = startOfToday();
-  d.setDate(d.getDate() - n);
-  return d;
+  return addDays(startOfVietnamDay(), -n);
 }
+
+function parseVietnamDate(value, endOfDay = false) {
+  const [year, month, day] = String(value).split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const start = new Date(Date.UTC(year, month - 1, day) - VN_OFFSET_MS);
+  return endOfDay ? new Date(start.getTime() + DAY_MS - 1) : start;
+}
+
 function fmtDateKey(d) {
-  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const vnDate = new Date(d.getTime() + VN_OFFSET_MS);
+  return `${String(vnDate.getUTCDate()).padStart(2, '0')}/${String(vnDate.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 // Tạo dải ngày liên tục để biểu đồ không bị khuyết
@@ -30,7 +44,7 @@ function buildDateRange(days) {
 }
 
 export const dashboard = asyncHandler(async (req, res) => {
-  const today = startOfToday();
+  const today = startOfVietnamDay();
   const yStart = daysAgo(1);
 
   const [todayInvoices, yesterdayInvoices, tables, lowStock, recent] = await Promise.all([
@@ -100,23 +114,22 @@ export const dashboard = asyncHandler(async (req, res) => {
 
 // Báo cáo doanh thu theo khoảng
 function resolvePeriod(period, from, to) {
-  const today = startOfToday();
+  const today = startOfVietnamDay();
   switch (period) {
     case 'today':
       return { start: today, days: 1 };
     case '7':
       return { start: daysAgo(6), days: 7 };
     case 'month': {
-      const d = new Date();
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const vnDate = new Date(Date.now() + VN_OFFSET_MS);
+      const start = new Date(Date.UTC(vnDate.getUTCFullYear(), vnDate.getUTCMonth(), 1) - VN_OFFSET_MS);
       const days = Math.ceil((today - start) / 86400000) + 1;
       return { start, days };
     }
     case 'custom':
       if (from) {
-        const start = new Date(from);
-        start.setHours(0, 0, 0, 0);
-        const end = to ? new Date(to) : new Date();
+        const start = parseVietnamDate(from);
+        const end = to ? parseVietnamDate(to, true) : new Date();
         const days = Math.max(1, Math.ceil((end - start) / 86400000) + 1);
         return { start, days, end };
       }
@@ -138,8 +151,7 @@ export const revenueReport = asyncHandler(async (req, res) => {
   // rebuild range from start
   range.length = 0;
   for (let i = 0; i < Math.min(days, 90); i++) {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
+    const d = addDays(start, i);
     range.push({ key: fmtDateKey(d), value: 0, orders: 0 });
   }
   const map = new Map(range.map((r) => [r.key, r]));
@@ -195,8 +207,8 @@ export const topItemsReport = asyncHandler(async (req, res) => {
 });
 
 export const inventoryReport = asyncHandler(async (req, res) => {
-  const d = new Date();
-  const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+  const vnDate = new Date(Date.now() + VN_OFFSET_MS);
+  const monthStart = new Date(Date.UTC(vnDate.getUTCFullYear(), vnDate.getUTCMonth(), 1) - VN_OFFSET_MS);
   const [items, txns] = await Promise.all([
     InventoryItem.find().sort({ name: 1 }),
     InventoryTransaction.find({ date: { $gte: monthStart } }),

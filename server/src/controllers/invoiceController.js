@@ -4,10 +4,20 @@ import Table from '../models/Table.js';
 import Customer from '../models/Customer.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function parseVietnamDate(value, endOfDay = false) {
+  const [year, month, day] = String(value).split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const start = new Date(Date.UTC(year, month - 1, day) - VN_OFFSET_MS);
+  return endOfDay ? new Date(start.getTime() + DAY_MS - 1) : start;
+}
+
 function genCode() {
-  const d = new Date();
-  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(
-    d.getDate()
+  const d = new Date(Date.now() + VN_OFFSET_MS);
+  const ymd = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(
+    d.getUTCDate()
   ).padStart(2, '0')}`;
   const rnd = Math.floor(1000 + Math.random() * 9000);
   return `HD${ymd}-${rnd}`;
@@ -80,12 +90,8 @@ export const listInvoices = asyncHandler(async (req, res) => {
   const filter = {};
   if (from || to) {
     filter.createdAt = {};
-    if (from) filter.createdAt.$gte = new Date(from);
-    if (to) {
-      const end = new Date(to);
-      end.setHours(23, 59, 59, 999);
-      filter.createdAt.$lte = end;
-    }
+    if (from) filter.createdAt.$gte = parseVietnamDate(from);
+    if (to) filter.createdAt.$lte = parseVietnamDate(to, true);
   }
   if (q) {
     filter.$or = [

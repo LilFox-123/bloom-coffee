@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import api from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { Spinner } from '../components/ui';
+import { EmptyState, Spinner } from '../components/ui';
 import { IconPrint, IconRevenue, IconCart, IconWarn, IconBox } from '../components/Icons';
 import { formatVND } from '../utils/format';
 
@@ -218,94 +218,106 @@ export default function Reports() {
           {tab === 'top' && top && (
             <section>
               <PeriodSelector {...{ period, setPeriod, from, to, setFrom, setTo }} />
-              <ChartCard title="Top 10 món bán chạy">
-                <ResponsiveContainer width="100%" height={390}>
-                  <BarChart layout="vertical" data={top.items} margin={{ left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F3E8D8" />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#9C8472' }} />
-                    <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: '#1A0F00' }} />
-                    <Tooltip cursor={{ fill: '#FEF6EC' }} formatter={(v) => [`${v}`, 'Số lượng']} />
-                    <Bar dataKey="quantity" name="Số lượng" fill="#C8922A" radius={[0, 8, 8, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-              <div className="card !p-0 mt-6 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Hạng</th>
-                        <th className="px-4 py-3 text-left font-medium">Tên món</th>
-                        <th className="px-4 py-3 text-right font-medium">Số lượng bán</th>
-                        <th className="px-4 py-3 text-right font-medium">Doanh thu</th>
-                        <th className="px-4 py-3 text-left font-medium w-1/4">% tổng doanh thu</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {top.items.map((it) => (
-                        <tr key={it.rank} className="border-b border-brdr hover:bg-muted">
-                          <td className="px-4 py-3 font-bold">#{it.rank}</td>
-                          <td className="px-4 py-3 font-medium">{it.name}</td>
-                          <td className="px-4 py-3 text-right">{it.quantity}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{formatVND(it.revenue)}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                                <div className="h-full bg-accent-green" style={{ width: `${it.percent}%` }} />
-                              </div>
-                              <span className="w-9 text-right text-xs text-text-muted">{it.percent}%</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {top.items.length === 0 ? (
+                <EmptyState title="Chưa có dữ liệu món bán chạy" message="Thử chọn khoảng thời gian dài hơn hoặc tạo thêm hóa đơn mẫu trước khi demo." />
+              ) : (
+                <>
+                  <ChartCard title="Top 10 món bán chạy">
+                    <ResponsiveContainer width="100%" height={390}>
+                      <BarChart layout="vertical" data={top.items} margin={{ left: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F3E8D8" />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: '#9C8472' }} />
+                        <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 11, fill: '#1A0F00' }} />
+                        <Tooltip cursor={{ fill: '#FEF6EC' }} formatter={(v) => [`${v}`, 'Số lượng']} />
+                        <Bar dataKey="quantity" name="Số lượng" fill="#C8922A" radius={[0, 8, 8, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                  <div className="card !p-0 mt-6 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-3 text-left font-medium">Hạng</th>
+                            <th className="px-4 py-3 text-left font-medium">Tên món</th>
+                            <th className="px-4 py-3 text-right font-medium">Số lượng bán</th>
+                            <th className="px-4 py-3 text-right font-medium">Doanh thu</th>
+                            <th className="px-4 py-3 text-left font-medium w-1/4">% tổng doanh thu</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {top.items.map((it) => (
+                            <tr key={it.rank} className="border-b border-brdr hover:bg-muted">
+                              <td className="px-4 py-3 font-bold">#{it.rank}</td>
+                              <td className="px-4 py-3 font-medium">{it.name}</td>
+                              <td className="px-4 py-3 text-right">{it.quantity}</td>
+                              <td className="px-4 py-3 text-right font-semibold">{formatVND(it.revenue)}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                                    <div className="h-full bg-accent-green" style={{ width: `${it.percent}%` }} />
+                                  </div>
+                                  <span className="w-9 text-right text-xs text-text-muted">{it.percent}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
             </section>
           )}
 
           {tab === 'inventory' && inventory && (
             <section>
-              <ChartCard title="Nhập / xuất theo nguyên liệu (tháng này)">
-                <ResponsiveContainer width="100%" height={380}>
-                  <BarChart data={inventory}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3E8D8" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9C8472' }} interval={0} angle={-15} textAnchor="end" height={70} />
-                    <YAxis tick={{ fontSize: 11, fill: '#9C8472' }} width={36} />
-                    <Tooltip cursor={{ fill: '#FEF6EC' }} />
-                    <Legend />
-                    <Bar dataKey="imported" stackId="a" name="Nhập" fill="#C8922A" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="exported" stackId="a" name="Xuất" fill="#E65100" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartCard>
-              <div className="card !p-0 mt-6 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Nguyên liệu</th>
-                        <th className="px-4 py-3 text-left font-medium">Đơn vị</th>
-                        <th className="px-4 py-3 text-right font-medium">Tồn hiện tại</th>
-                        <th className="px-4 py-3 text-right font-medium">Nhập trong tháng</th>
-                        <th className="px-4 py-3 text-right font-medium">Xuất trong tháng</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inventory.map((r, i) => (
-                        <tr key={i} className="border-b border-brdr hover:bg-muted">
-                          <td className="px-4 py-3 font-medium">{r.name}</td>
-                          <td className="px-4 py-3 text-text-muted">{r.unit}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{r.stock}</td>
-                          <td className="px-4 py-3 text-right text-accent-green-dark">+{r.imported}</td>
-                          <td className="px-4 py-3 text-right text-warning">−{r.exported}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {inventory.length === 0 ? (
+                <EmptyState title="Chưa có dữ liệu kho" message="Thêm nguyên liệu hoặc tạo phiếu nhập/xuất để xem báo cáo kho." />
+              ) : (
+                <>
+                  <ChartCard title="Nhập / xuất theo nguyên liệu (tháng này)">
+                    <ResponsiveContainer width="100%" height={380}>
+                      <BarChart data={inventory}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3E8D8" />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#9C8472' }} interval={0} angle={-15} textAnchor="end" height={70} />
+                        <YAxis tick={{ fontSize: 11, fill: '#9C8472' }} width={36} />
+                        <Tooltip cursor={{ fill: '#FEF6EC' }} />
+                        <Legend />
+                        <Bar dataKey="imported" stackId="a" name="Nhập" fill="#C8922A" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="exported" stackId="a" name="Xuất" fill="#E65100" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartCard>
+                  <div className="card !p-0 mt-6 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-3 text-left font-medium">Nguyên liệu</th>
+                            <th className="px-4 py-3 text-left font-medium">Đơn vị</th>
+                            <th className="px-4 py-3 text-right font-medium">Tồn hiện tại</th>
+                            <th className="px-4 py-3 text-right font-medium">Nhập trong tháng</th>
+                            <th className="px-4 py-3 text-right font-medium">Xuất trong tháng</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {inventory.map((r, i) => (
+                            <tr key={i} className="border-b border-brdr hover:bg-muted">
+                              <td className="px-4 py-3 font-medium">{r.name}</td>
+                              <td className="px-4 py-3 text-text-muted">{r.unit}</td>
+                              <td className="px-4 py-3 text-right font-semibold">{r.stock}</td>
+                              <td className="px-4 py-3 text-right text-accent-green-dark">+{r.imported}</td>
+                              <td className="px-4 py-3 text-right text-warning">−{r.exported}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
             </section>
           )}
         </>
