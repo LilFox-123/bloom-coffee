@@ -15,16 +15,33 @@ const SLIDES = [
     bg: GOLDEN_HOUR_PROMO,
     productAlt: 'Giờ vàng đồng giá Bloom Coffee',
     fallbackColor: '#3B2314',
+    fullImage: true,
   },
   {
     bg: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=85',
+    product:
+      'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=720&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=420&q=80',
     productAlt: 'Mua 2 tặng 1',
     fallbackColor: '#1F5A3D',
+    badge: { text: 'ƯU ĐÃI COMBO', cls: 'bg-white/20 text-white ring-1 ring-white/25' },
+    heading: ['Mua 2', 'tặng bánh'],
+    sub: 'Gọi nước kèm croissant để bữa nhẹ trọn vị hơn',
+    cta: 'Xem combo',
   },
   {
     bg: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1200&q=85',
+    product:
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=720&q=85',
+    accent:
+      'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=420&q=80',
     productAlt: 'Tích điểm mỗi đơn hàng',
     fallbackColor: '#3B2314',
+    badge: { text: 'ĐIỂM THƯỞNG', cls: 'bg-white/20 text-white ring-1 ring-white/25' },
+    heading: ['Tích điểm', 'mỗi đơn hàng'],
+    sub: '10.000₫ = 1 điểm, đổi topping hoặc món yêu thích',
+    cta: 'Đặt món ngay',
   },
 ];
 
@@ -121,6 +138,8 @@ const isNewItem = (item) =>
 
 function PromoBanner() {
   const [idx, setIdx] = useState(0);
+  const slide = SLIDES[idx];
+  const fullImage = Boolean(slide.fullImage);
 
   useEffect(() => {
     const id = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 5200);
@@ -137,13 +156,70 @@ function PromoBanner() {
           }`}
           style={{
             backgroundColor: s.fallbackColor,
-            backgroundImage: `url("${s.bg}")`,
+            backgroundImage: s.fullImage
+              ? `url("${s.bg}")`
+              : `linear-gradient(160deg, rgba(59,35,20,0.96) 0%, rgba(59,35,20,0.76) 42%, rgba(59,35,20,0.16) 100%), url("${s.bg}")`,
             backgroundPosition: 'center',
             backgroundSize: 'cover',
           }}
           aria-hidden={i !== idx}
         />
       ))}
+
+      {!fullImage && (
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_26%,rgba(255,255,255,0.28),transparent_25%),linear-gradient(180deg,transparent,rgba(0,0,0,0.24))]" />
+
+          <div className="relative z-10 grid min-h-[360px] grid-cols-[0.92fr_1.08fr] items-center gap-4 px-5 py-6">
+            <div className="customer-rise relative z-20">
+              <span
+                className={`inline-flex min-h-[30px] items-center rounded-full px-3 py-1 text-xs font-extrabold shadow-lg ${slide.badge.cls}`}
+              >
+                {slide.badge.text}
+              </span>
+              <h2 className="mt-4 text-[38px] font-black leading-[0.98] tracking-normal text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.42)]">
+                {slide.heading.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </h2>
+              <p className="mt-4 max-w-[230px] rounded-2xl bg-[#1E1008]/70 px-4 py-3 text-sm font-bold leading-relaxed text-[#FFF7E8] shadow-[0_12px_28px_rgba(0,0,0,0.25)] ring-1 ring-white/10 backdrop-blur-sm">
+                {slide.sub}
+              </p>
+              <div className="mt-4 flex items-center gap-2">
+                <span className="rounded-2xl bg-[#C89B3C] px-4 py-2 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(200,155,60,0.32)]">
+                  {slide.cta}
+                </span>
+                <span className="rounded-2xl bg-white/20 px-3 py-2 text-xs font-bold text-white ring-1 ring-white/20 backdrop-blur">
+                  Freeship tại bàn
+                </span>
+              </div>
+            </div>
+
+            <div className="relative min-h-[292px]">
+              <div className="customer-shine absolute right-0 top-2 h-[250px] w-[88%] overflow-hidden rounded-[34px] border border-white/20 bg-white/10 shadow-[0_24px_58px_rgba(0,0,0,0.38)]">
+                <img
+                  src={slide.product}
+                  alt={slide.productAlt}
+                  className="customer-float h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+
+              <div className="absolute bottom-3 left-0 h-24 w-28 overflow-hidden rounded-3xl border border-white/25 bg-white/20 p-1 shadow-[0_16px_32px_rgba(0,0,0,0.28)] backdrop-blur">
+                <img src={slide.accent} alt="" className="h-full w-full rounded-[20px] object-cover" />
+              </div>
+
+              <div className="absolute bottom-1 right-2 rounded-2xl bg-white/90 px-3 py-2 text-xs font-extrabold text-[#3B2314] shadow-[0_14px_28px_rgba(0,0,0,0.24)]">
+                Hot deal hôm nay
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
         {SLIDES.map((_, i) => (
