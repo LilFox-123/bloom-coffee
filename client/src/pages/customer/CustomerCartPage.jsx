@@ -136,10 +136,6 @@ export default function CustomerCartPage() {
           <span>Tạm tính</span>
           <span>{formatVND(cart.subtotal)}</span>
         </div>
-        <div className="flex justify-between text-[#9C8472]">
-          <span>VAT (10%)</span>
-          <span>{formatVND(cart.vat)}</span>
-        </div>
         <div className="flex justify-between items-center pt-2 border-t border-[#E8D5BC]">
           <span className="font-semibold text-[#1A0F00]">Tổng cộng</span>
           <span className="text-xl font-bold text-[#C8922A]">{formatVND(cart.total)}</span>

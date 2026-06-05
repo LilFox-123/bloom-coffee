@@ -91,8 +91,8 @@ export function CartProvider({ children }) {
     () => list.reduce((s, i) => s + i.menuItem.price * i.quantity, 0),
     [list]
   );
-  const vat = useMemo(() => Math.round(subtotal * 0.1), [subtotal]);
-  const total = useMemo(() => subtotal + vat, [subtotal, vat]);
+  const vat = useMemo(() => 0, []);
+  const total = useMemo(() => subtotal, [subtotal]);
 
   const qtyOf = useCallback(
     (id) =>
