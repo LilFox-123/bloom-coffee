@@ -24,7 +24,7 @@ const CATEGORY_IMAGES = {
   'Nước ép': '/images/menu/juice-glass.svg',
   'Đồ ăn nhẹ': '/images/menu/snack-plate.svg',
 };
-const PROMO_BANNER_IMAGE = '/images/menu/golden-hour-promo.png';
+const PROMO_BANNER_IMAGE = '/images/menu/menu-admin-hero-promo.png';
 
 const CATEGORY_META = {
   'Cà phê': { icon: '☕', tint: 'from-[#5A2E19] to-[#C89B3C]' },
