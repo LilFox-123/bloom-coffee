@@ -326,14 +326,17 @@ export default function CustomerConfirmPage() {
       if (method === 'momo' || method === 'vnpay') {
         const successUrl = `${window.location.origin}/order/${tableId}/success/${newOrderId}`;
         const endpoint = method === 'momo' ? '/payment/momo' : '/payment/vnpay';
-        const payRes = await api.post(endpoint, {
+        const paymentPayload = {
           amount: payableTotal,
           orderInfo: `Bloom Coffee - ${table.tableName}`,
           orderId: newOrderId,
-          redirectUrl: successUrl,
-          returnUrl: successUrl,
-          ipnUrl: 'https://bloom-coffee-sab9.onrender.com/api/payment/momo/ipn',
-        });
+        };
+        if (method === 'momo') {
+          paymentPayload.redirectUrl = successUrl;
+          paymentPayload.ipnUrl = 'https://bloom-coffee-sab9.onrender.com/api/payment/momo/ipn';
+        }
+
+        const payRes = await api.post(endpoint, paymentPayload);
         const payUrl = payRes.data.data?.payUrl;
         if (payUrl) {
           cart.clear();

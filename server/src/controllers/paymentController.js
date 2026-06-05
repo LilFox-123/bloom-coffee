@@ -62,6 +62,16 @@ function buildVnpQuery(params) {
     .join('&');
 }
 
+function getRequestOrigin(req) {
+  const proto = req.headers['x-forwarded-proto']?.split(',')[0]?.trim() || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host']?.split(',')[0]?.trim() || req.get('host');
+  return `${proto}://${host}`;
+}
+
+function getVNPayReturnUrl(req) {
+  return process.env.VNPAY_RETURN_URL || `${getRequestOrigin(req)}/api/payment/vnpay/return`;
+}
+
 function vnpDate(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return (
@@ -182,19 +192,26 @@ export const handleMoMoIpn = asyncHandler(async (req, res) => {
 /* =====================  VNPay (sandbox)  ===================== */
 // POST /api/payment/vnpay
 export const createVNPayPayment = asyncHandler(async (req, res) => {
-  const { amount, orderInfo, orderId, returnUrl } = req.body;
+  const { amount, orderInfo, orderId } = req.body;
 
   if (!amount || !orderId) {
     return res.status(400).json({ success: false, message: 'Thiếu thông tin thanh toán' });
   }
 
-  const tmnCode = process.env.VNPAY_TMN_CODE || 'VNPAYTEST';
-  const secretKey = process.env.VNPAY_HASH_SECRET || 'RAOEXHYVSDDIIENL';
+  const tmnCode = process.env.VNPAY_TMN_CODE;
+  const secretKey = process.env.VNPAY_HASH_SECRET;
   const vnpUrl = process.env.VNPAY_URL || VNPAY_DEFAULT_URL;
+
+  if (!tmnCode || !secretKey) {
+    console.error('[VNPay] Missing VNPAY_TMN_CODE or VNPAY_HASH_SECRET');
+    return res.status(500).json({ success: false, message: 'Thiếu cấu hình VNPay sandbox' });
+  }
+
   const ipAddr =
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
     req.socket?.remoteAddress ||
     '127.0.0.1';
+  const returnUrl = getVNPayReturnUrl(req);
 
   const now = new Date();
   const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
@@ -208,7 +225,7 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
     vnp_IpAddr: ipAddr,
     vnp_Locale: 'vn',
     vnp_OrderInfo: orderInfo || `Thanh toan Bloom Coffee ${orderId}`,
-    vnp_ReturnUrl: returnUrl || process.env.VNPAY_RETURN_URL || `${req.protocol}://${req.get('host')}/`,
+    vnp_ReturnUrl: returnUrl,
     vnp_TmnCode: tmnCode,
     vnp_TxnRef: String(orderId),
     vnp_Version: '2.1.0',
@@ -221,7 +238,7 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
     vnp_IpAddr: ipAddr,
     vnp_Locale: 'vn',
     vnp_OrderInfo: orderInfo || `Thanh toan Bloom Coffee ${orderId}`,
-    vnp_ReturnUrl: returnUrl || process.env.VNPAY_RETURN_URL || `${req.protocol}://${req.get('host')}/`,
+    vnp_ReturnUrl: returnUrl,
     vnp_TmnCode: tmnCode,
     vnp_TxnRef: String(orderId),
     vnp_Version: '2.1.0',
@@ -238,17 +255,29 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
 
 // GET /api/payment/vnpay/return
 export const handleVNPayReturn = asyncHandler(async (req, res) => {
-  const secretKey = process.env.VNPAY_HASH_SECRET || 'RAOEXHYVSDDIIENL';
+  const secretKey = process.env.VNPAY_HASH_SECRET;
+  const origin = getRequestOrigin(req);
+  if (!secretKey) {
+    console.error('[VNPay] Missing VNPAY_HASH_SECRET on return');
+    return res.redirect(`${origin}/order?paymentStatus=failed`);
+  }
+
   const { vnp_SecureHash: secureHash, vnp_SecureHashType: _hashType, ...rest } = req.query;
   const signedParams = sortVnpParams(rest);
   const signData = buildVnpQuery(signedParams);
   const expectedHash = hmacSha512(signData, secretKey);
 
-  if (!safeEqual(secureHash, expectedHash)) {
-    return res.redirect('/order-failed');
+  if (!safeEqual(String(secureHash || '').toLowerCase(), expectedHash.toLowerCase())) {
+    console.error('[VNPay] Invalid return signature');
+    return res.redirect(`${origin}/order?paymentStatus=failed`);
   }
 
   const paymentStatus = req.query.vnp_ResponseCode === '00' ? 'paid' : 'failed';
-  await updateOrderPaymentStatus(req.query.vnp_TxnRef, paymentStatus);
-  res.redirect(paymentStatus === 'paid' ? '/order-success' : '/order-failed');
+  const order = await updateOrderPaymentStatus(req.query.vnp_TxnRef, paymentStatus);
+  if (order?.tableId) {
+    return res.redirect(
+      `${origin}/order/${order.tableId}/success/${order._id}?paymentStatus=${paymentStatus}&gateway=vnpay`
+    );
+  }
+  res.redirect(`${origin}/order/success?id=${req.query.vnp_TxnRef}&paymentStatus=${paymentStatus}&gateway=vnpay`);
 });
