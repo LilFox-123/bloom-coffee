@@ -27,7 +27,7 @@ const invoiceSchema = new mongoose.Schema(
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
     items: { type: [invoiceItemSchema], default: [] },
     subtotal: { type: Number, required: true }, // VNĐ
-    vat: { type: Number, required: true }, // VNĐ (10%)
+    vat: { type: Number, required: true }, // VNĐ, currently 0 because Bloom Coffee does not charge VAT
     total: { type: Number, required: true }, // VNĐ
     paymentMethod: {
       type: String,

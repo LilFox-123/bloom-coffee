@@ -226,10 +226,6 @@ export default function Invoices() {
                   <span>Tạm tính</span>
                   <span>{formatVND(detail.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-text-muted">
-                  <span>VAT (10%)</span>
-                  <span>{formatVND(detail.vat)}</span>
-                </div>
                 <div className="flex justify-between items-center pt-2 border-t border-brdr">
                   <span className="font-semibold">Tổng cộng</span>
                   <span className="text-xl font-bold text-accent-green-dark">{formatVND(detail.total)}</span>

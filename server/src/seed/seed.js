@@ -93,8 +93,8 @@ function buildHistoricalInvoices(staffList, menu, tables) {
       items.push({ menuItemId: m._id, name: m.name, price: m.price, quantity });
     }
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const vat = Math.round(subtotal * 0.1);
-    const total = subtotal + vat;
+    const vat = 0;
+    const total = subtotal;
     const staff = staffList[n % staffList.length];
     const table = tables[n % tables.length];
 

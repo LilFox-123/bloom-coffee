@@ -33,6 +33,19 @@ function fmtDateKey(d) {
   return `${String(vnDate.getUTCDate()).padStart(2, '0')}/${String(vnDate.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
+function invoiceAmount(invoice) {
+  return invoice.subtotal ?? invoice.total;
+}
+
+function withoutVat(invoice) {
+  const data = invoice.toObject ? invoice.toObject() : invoice;
+  return {
+    ...data,
+    vat: 0,
+    total: data.subtotal ?? data.total,
+  };
+}
+
 // Tạo dải ngày liên tục để biểu đồ không bị khuyết
 function buildDateRange(days) {
   const arr = [];
@@ -55,8 +68,8 @@ export const dashboard = asyncHandler(async (req, res) => {
     Invoice.find().sort({ createdAt: -1 }).limit(8),
   ]);
 
-  const revenueToday = todayInvoices.reduce((s, i) => s + i.total, 0);
-  const revenueYesterday = yesterdayInvoices.reduce((s, i) => s + i.total, 0);
+  const revenueToday = todayInvoices.reduce((s, i) => s + invoiceAmount(i), 0);
+  const revenueYesterday = yesterdayInvoices.reduce((s, i) => s + invoiceAmount(i), 0);
   const ordersToday = todayInvoices.length;
   const ordersYesterday = yesterdayInvoices.length;
   const servingTables = tables.filter((t) => t.status !== 'trong').length;
@@ -74,7 +87,7 @@ export const dashboard = asyncHandler(async (req, res) => {
   const map = new Map(range.map((r) => [r.key, r]));
   for (const inv of allInvoices) {
     const key = fmtDateKey(new Date(inv.createdAt));
-    if (map.has(key)) map.get(key).value += inv.total;
+    if (map.has(key)) map.get(key).value += invoiceAmount(inv);
   }
   const revenue30 = range.map((r) => ({ date: r.key, value: r.value }));
 
@@ -107,7 +120,7 @@ export const dashboard = asyncHandler(async (req, res) => {
       },
       revenue30,
       topItems,
-      recentInvoices: recent,
+      recentInvoices: recent.map(withoutVat),
     },
   });
 });
@@ -158,13 +171,13 @@ export const revenueReport = asyncHandler(async (req, res) => {
   for (const inv of invoices) {
     const key = fmtDateKey(new Date(inv.createdAt));
     if (map.has(key)) {
-      map.get(key).value += inv.total;
+      map.get(key).value += invoiceAmount(inv);
       map.get(key).orders += 1;
     }
   }
   const series = range.map((r) => ({ date: r.key, value: r.value, orders: r.orders }));
 
-  const totalRevenue = invoices.reduce((s, i) => s + i.total, 0);
+  const totalRevenue = invoices.reduce((s, i) => s + invoiceAmount(i), 0);
   const totalOrders = invoices.length;
   const avgOrder = totalOrders ? Math.round(totalRevenue / totalOrders) : 0;
   const maxDay = series.reduce((m, r) => Math.max(m, r.value), 0);

@@ -23,6 +23,15 @@ function genCode() {
   return `HD${ymd}-${rnd}`;
 }
 
+function withoutVat(invoice) {
+  const data = invoice.toObject ? invoice.toObject() : invoice;
+  return {
+    ...data,
+    vat: 0,
+    total: data.subtotal ?? data.total,
+  };
+}
+
 export const createInvoice = asyncHandler(async (req, res) => {
   const { orderId, paymentMethod = 'tienmat', customerId = null } = req.body;
   const order = await Order.findById(orderId);
@@ -42,8 +51,8 @@ export const createInvoice = asyncHandler(async (req, res) => {
     customizations: i.customizations || {},
   }));
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const vat = Math.round(subtotal * 0.1);
-  const total = subtotal + vat;
+  const vat = 0;
+  const total = subtotal;
   const resolvedCustomerId = customerId || order.customerId || null;
 
   const invoice = await Invoice.create({
@@ -82,7 +91,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(201).json({ success: true, data: invoice });
+  res.status(201).json({ success: true, data: withoutVat(invoice) });
 });
 
 export const listInvoices = asyncHandler(async (req, res) => {
@@ -100,13 +109,13 @@ export const listInvoices = asyncHandler(async (req, res) => {
     ];
   }
   const invoices = await Invoice.find(filter).sort({ createdAt: -1 }).limit(500);
-  res.json({ success: true, data: invoices });
+  res.json({ success: true, data: invoices.map(withoutVat) });
 });
 
 export const getInvoice = asyncHandler(async (req, res) => {
   const invoice = await Invoice.findById(req.params.id);
   if (!invoice) return res.status(404).json({ success: false, message: 'Không tìm thấy hóa đơn' });
-  res.json({ success: true, data: invoice });
+  res.json({ success: true, data: withoutVat(invoice) });
 });
 
 export const deleteInvoice = asyncHandler(async (req, res) => {

@@ -429,8 +429,7 @@ function OrderScreen({ tableId }) {
   }
 
   const subtotal = (order?.items || []).reduce((s, i) => s + i.price * i.quantity, 0);
-  const vat = Math.round(subtotal * 0.1);
-  const total = subtotal + vat;
+  const total = subtotal;
   const itemCount = (order?.items || []).reduce((s, i) => s + i.quantity, 0);
 
   const cartPanel = (
@@ -515,10 +514,6 @@ function OrderScreen({ tableId }) {
         <div className="flex justify-between text-[#8A6F5D]">
           <span>Tạm tính</span>
           <span>{formatVND(subtotal)}</span>
-        </div>
-        <div className="mt-2 flex justify-between text-[#8A6F5D]">
-          <span>VAT (10%)</span>
-          <span>{formatVND(vat)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between border-t border-[#E8D5BC] pt-3">
           <span className="font-black text-[#1A0F00]">Tổng cộng</span>
