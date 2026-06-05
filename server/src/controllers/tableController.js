@@ -1,4 +1,5 @@
 import Table from '../models/Table.js';
+import Order from '../models/Order.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 export const listTables = asyncHandler(async (req, res) => {
@@ -43,6 +44,70 @@ export const seatTable = asyncHandler(async (req, res) => {
   );
   if (!table) return res.status(404).json({ success: false, message: 'Không tìm thấy bàn' });
   res.json({ success: true, data: table });
+});
+
+export const transferTableOrder = asyncHandler(async (req, res) => {
+  const { targetTableId } = req.body;
+  const sourceTableId = req.params.id;
+
+  if (!targetTableId) {
+    return res.status(400).json({ success: false, message: 'Vui lòng chọn bàn cần chuyển đến' });
+  }
+
+  if (String(sourceTableId) === String(targetTableId)) {
+    return res.status(400).json({ success: false, message: 'Bàn chuyển đến phải khác bàn hiện tại' });
+  }
+
+  const [sourceTable, targetTable] = await Promise.all([
+    Table.findById(sourceTableId),
+    Table.findById(targetTableId),
+  ]);
+
+  if (!sourceTable) return res.status(404).json({ success: false, message: 'Không tìm thấy bàn hiện tại' });
+  if (!targetTable) return res.status(404).json({ success: false, message: 'Không tìm thấy bàn chuyển đến' });
+
+  if (targetTable.status !== 'trong') {
+    return res.status(400).json({ success: false, message: 'Chỉ có thể chuyển sang bàn đang trống' });
+  }
+
+  const activeTargetOrder = await Order.findOne({ tableId: targetTable._id, status: { $ne: 'hoantat' } });
+  if (activeTargetOrder) {
+    return res.status(400).json({ success: false, message: 'Bàn chuyển đến vẫn còn order đang xử lý' });
+  }
+
+  let order = null;
+  if (sourceTable.currentOrderId) {
+    order = await Order.findOne({ _id: sourceTable.currentOrderId, status: { $ne: 'hoantat' } });
+  }
+  if (!order) {
+    order = await Order.findOne({ tableId: sourceTable._id, status: { $ne: 'hoantat' } }).sort({ createdAt: -1 });
+  }
+
+  if (!order) {
+    return res.status(400).json({ success: false, message: 'Bàn này chưa có order đang xử lý' });
+  }
+
+  order.tableId = targetTable._id;
+  targetTable.status = 'dangdung';
+  targetTable.currentOrderId = order._id;
+  targetTable.guests = sourceTable.guests || targetTable.guests || 1;
+  targetTable.occupiedAt = sourceTable.occupiedAt || new Date();
+
+  sourceTable.status = 'trong';
+  sourceTable.currentOrderId = null;
+  sourceTable.guests = 0;
+  sourceTable.occupiedAt = null;
+
+  await Promise.all([order.save(), sourceTable.save(), targetTable.save()]);
+
+  res.json({
+    success: true,
+    data: {
+      order,
+      fromTable: sourceTable,
+      toTable: targetTable,
+    },
+  });
 });
 
 export const deleteTable = asyncHandler(async (req, res) => {

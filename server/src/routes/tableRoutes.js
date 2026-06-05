@@ -5,6 +5,7 @@ import {
   createTable,
   updateTable,
   seatTable,
+  transferTableOrder,
   deleteTable,
 } from '../controllers/tableController.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
@@ -25,6 +26,12 @@ router.post(
   createTable
 );
 router.patch('/:id/seat', seatTable);
+router.patch(
+  '/:id/transfer',
+  [body('targetTableId').isMongoId().withMessage('Bàn chuyển đến không hợp lệ')],
+  validate,
+  transferTableOrder
+);
 router.patch('/:id', updateTable);
 router.delete('/:id', requireAdmin, deleteTable);
 

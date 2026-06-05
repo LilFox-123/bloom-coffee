@@ -42,10 +42,11 @@ function FlowGuide() {
     { icon: IconTable, title: '1. Nhận khách', text: 'Chọn bàn trống và nhập số khách.' },
     { icon: IconCart, title: '2. Gọi món', text: 'Mở order của bàn để thêm món.' },
     { icon: IconReceipt, title: '3. Thanh toán', text: 'Tạo hóa đơn, bàn tự về trạng thái trống.' },
+    { icon: IconTable, title: '4. Chuyển bàn', text: 'Chuyển order sang bàn trống khi khách đổi chỗ.' },
   ];
 
   return (
-    <section className="mb-5 grid gap-3 xl:grid-cols-3">
+    <section className="mb-5 grid gap-3 xl:grid-cols-4">
       {steps.map((step) => {
         const Icon = step.icon;
         return (
@@ -82,6 +83,9 @@ export default function Tables() {
   const [form, setForm] = useState({ name: '', capacity: 4, zone: 'Trong nhà' });
   const [errors, setErrors] = useState({});
   const [qrTable, setQrTable] = useState(null);
+  const [transferModal, setTransferModal] = useState(null);
+  const [targetTableId, setTargetTableId] = useState('');
+  const [transferring, setTransferring] = useState(false);
 
   const load = async (silent = false) => {
     try {
@@ -121,9 +125,20 @@ export default function Tables() {
     [filter, search, tables, zone]
   );
 
+  const transferTargets = useMemo(
+    () => tables.filter((t) => t.status === 'trong' && t._id !== transferModal?._id),
+    [tables, transferModal]
+  );
+
   const openSeat = (table) => {
     setSeatModal(table);
     setGuests(Math.max(1, Number(table.guests || 2)));
+  };
+
+  const openTransfer = (table) => {
+    const firstTarget = tables.find((t) => t.status === 'trong' && t._id !== table._id);
+    setTransferModal(table);
+    setTargetTableId(firstTarget?._id || '');
   };
 
   const seat = async () => {
@@ -135,6 +150,27 @@ export default function Tables() {
       load();
     } catch (err) {
       toast.error(err.message);
+    }
+  };
+
+  const transferOrder = async () => {
+    if (!transferModal) return;
+    if (!targetTableId) {
+      toast.error('Vui lòng chọn bàn chuyển đến');
+      return;
+    }
+    const target = tables.find((t) => t._id === targetTableId);
+    try {
+      setTransferring(true);
+      await api.patch(`/tables/${transferModal._id}/transfer`, { targetTableId });
+      toast.success(`Đã chuyển ${transferModal.name} sang ${target?.name || 'bàn mới'}`);
+      setTransferModal(null);
+      setTargetTableId('');
+      await load();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -265,6 +301,12 @@ export default function Tables() {
                   >
                     Thanh toán
                   </button>
+                  <button
+                    className="col-span-2 min-h-[44px] rounded-xl border border-[#E1CDB9] bg-[#FAF6F1] px-3 text-sm font-black text-[#3B2314] hover:border-[#C89B3C] hover:bg-[#FFF3D8]"
+                    onClick={() => openTransfer(t)}
+                  >
+                    Chuyển bàn
+                  </button>
                 </div>
               )}
               <button
@@ -303,6 +345,59 @@ export default function Tables() {
             </button>
             <button type="button" className="btn-primary" onClick={seat}>
               Nhận khách
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={!!transferModal} onClose={() => setTransferModal(null)} title={`Chuyển bàn - ${transferModal?.name || ''}`}>
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-[#FAF6F1] p-4 text-sm font-medium text-[#6B4B37]">
+            Order hiện tại sẽ được chuyển sang bàn trống được chọn. Bàn cũ sẽ tự trở về trạng thái trống.
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-[#E8D5BC] bg-white p-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.08em] text-[#9C8472]">Từ bàn</p>
+              <p className="mt-1 text-lg font-black text-[#1A0F00]">{transferModal?.name}</p>
+              <p className="text-xs font-semibold text-[#8A6F5D]">{transferModal?.guests || 0} khách đang phục vụ</p>
+            </div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.08em] text-[#9C8472]">Sang bàn</p>
+              <select
+                className="input mt-1"
+                value={targetTableId}
+                onChange={(e) => setTargetTableId(e.target.value)}
+                disabled={transferTargets.length === 0}
+              >
+                {transferTargets.length === 0 ? (
+                  <option value="">Không có bàn trống</option>
+                ) : (
+                  transferTargets.map((table) => (
+                    <option key={table._id} value={table._id}>
+                      {table.name} - {table.zone} - {table.capacity} khách
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#F4D7A1] bg-[#FFF8E8] p-4 text-sm font-bold text-[#8A5A12]">
+            Lưu ý: chỉ chuyển sang bàn đang trống để tránh trộn nhầm hóa đơn giữa hai nhóm khách.
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button type="button" className="btn-secondary" onClick={() => setTransferModal(null)}>
+              Hủy
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={transferOrder}
+              disabled={transferring || transferTargets.length === 0}
+            >
+              {transferring ? 'Đang chuyển...' : 'Chuyển bàn'}
             </button>
           </div>
         </div>
