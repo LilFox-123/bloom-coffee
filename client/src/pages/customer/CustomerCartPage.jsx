@@ -7,6 +7,12 @@ import QuantityStepper from '../../components/customer/QuantityStepper';
 
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 
+function customizationText(customizations = {}) {
+  return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function CustomerHeader({ title, onBack, badge }) {
   return (
     <header className="sticky top-0 z-20 bg-[#2C1A0E] h-16 px-4 flex items-center gap-3">
@@ -67,7 +73,7 @@ export default function CustomerCartPage() {
       <div className="bg-white rounded-2xl border border-[#E8D5BC] mx-4 mt-4 overflow-hidden">
         {cart.list.map((row, idx) => (
           <div
-            key={row.menuItem._id}
+            key={row.lineId || row.menuItem._id}
             className={`p-4 ${idx < cart.list.length - 1 ? 'border-b border-[#F3E8D8]' : ''}`}
           >
             <div className="flex items-start justify-between gap-3">
@@ -82,10 +88,17 @@ export default function CustomerCartPage() {
                     }}
                   />
                 </div>
-                <p className="text-sm font-semibold text-[#1A0F00]">{row.menuItem.name}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1A0F00]">{row.menuItem.name}</p>
+                  {customizationText(row.customizations) && (
+                    <p className="mt-1 line-clamp-2 text-xs font-medium text-[#8A6F5D]">
+                      {customizationText(row.customizations)}
+                    </p>
+                  )}
+                </div>
               </div>
               <button
-                onClick={() => cart.remove(row.menuItem._id)}
+                onClick={() => cart.remove(row.lineId || row.menuItem._id)}
                 className="text-[#C62828] p-1"
                 aria-label="Xóa"
               >
@@ -95,8 +108,8 @@ export default function CustomerCartPage() {
             <div className="flex items-center justify-between mt-3">
               <QuantityStepper
                 value={row.quantity}
-                onInc={() => cart.inc(row.menuItem._id)}
-                onDec={() => cart.dec(row.menuItem._id)}
+                onInc={() => cart.inc(row.lineId || row.menuItem._id)}
+                onDec={() => cart.dec(row.lineId || row.menuItem._id)}
               />
               <span className="text-[#C8922A] font-bold">
                 {formatVND(row.menuItem.price * row.quantity)}

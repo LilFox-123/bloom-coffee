@@ -6,6 +6,12 @@ const orderItemSchema = new mongoose.Schema(
     name: { type: String, required: true }, // snapshot
     price: { type: Number, required: true }, // snapshot, VNĐ
     quantity: { type: Number, required: true, min: 1, default: 1 },
+    customizations: {
+      ice: { type: String, default: '' },
+      sugar: { type: String, default: '' },
+      sweetness: { type: String, default: '' },
+      note: { type: String, default: '' },
+    },
     status: {
       type: String,
       enum: ['dangphache', 'chuanbiphucvu', 'daphucvu'],

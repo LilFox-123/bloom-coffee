@@ -6,6 +6,12 @@ const invoiceItemSchema = new mongoose.Schema(
     name: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
+    customizations: {
+      ice: { type: String, default: '' },
+      sugar: { type: String, default: '' },
+      sweetness: { type: String, default: '' },
+      note: { type: String, default: '' },
+    },
   },
   { _id: false }
 );

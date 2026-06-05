@@ -96,6 +96,12 @@ function getMemberTier(points = 0) {
   return 'Member';
 }
 
+function customizationText(customizations = {}) {
+  return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function MemberCard({ member, estimatedPoints }) {
   const tier = member.tier || getMemberTier(member.points);
 
@@ -302,7 +308,11 @@ export default function CustomerConfirmPage() {
       customerId: cart.memberCustomer?._id || undefined,
       notes: notes || undefined,
       paymentMethod: method,
-      items: cart.list.map((r) => ({ menuItemId: r.menuItem._id, quantity: r.quantity })),
+      items: cart.list.map((r) => ({
+        menuItemId: r.menuItem._id,
+        quantity: r.quantity,
+        customizations: r.customizations || {},
+      })),
     });
     return res.data.data.orderId;
   };
@@ -375,9 +385,14 @@ export default function CustomerConfirmPage() {
       {/* order summary */}
       <div className="mx-4 mt-4 rounded-2xl border border-[#E3D3C4] bg-white p-4">
         {cart.list.map((row) => (
-          <div key={row.menuItem._id} className="flex justify-between py-1.5 text-sm">
-            <span className="text-[#5A4232]">
+          <div key={row.lineId || row.menuItem._id} className="flex justify-between gap-3 py-1.5 text-sm">
+            <span className="min-w-0 text-[#5A4232]">
               <span className="font-semibold text-[#C89B3C]">{row.quantity}×</span> {row.menuItem.name}
+              {customizationText(row.customizations) && (
+                <span className="mt-0.5 block text-xs font-medium text-[#8A6F5D]">
+                  {customizationText(row.customizations)}
+                </span>
+              )}
             </span>
             <span className="font-medium text-[#3B2314]">
               {formatVND(row.menuItem.price * row.quantity)}

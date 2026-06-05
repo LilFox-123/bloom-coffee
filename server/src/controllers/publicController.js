@@ -58,11 +58,27 @@ function publicOrderPayload(order, table) {
     items: order.items.map((i) => ({
       name: i.name,
       quantity: i.quantity,
+      customizations: i.customizations || {},
       status: i.status,
     })),
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };
+}
+
+function cleanCustomizations(customizations = {}) {
+  const allowed = ['ice', 'sugar', 'sweetness', 'note'];
+  return allowed.reduce((clean, key) => {
+    const value = String(customizations[key] || '').trim();
+    if (value) clean[key] = value.slice(0, 120);
+    return clean;
+  }, {});
+}
+
+function customizationSignature(customizations = {}) {
+  return ['ice', 'sugar', 'sweetness', 'note']
+    .map((key) => `${key}:${customizations[key] || ''}`)
+    .join('|');
 }
 
 // GET /api/public/table/:tableId
@@ -204,6 +220,7 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
       name: m.name,
       price: m.price,
       quantity: qty,
+      customizations: cleanCustomizations(line.customizations),
       status: 'dangphache',
     });
   }
@@ -237,7 +254,12 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
 
   // merge incoming items into the order
   for (const incoming of orderItems) {
-    const existing = order.items.find((i) => String(i.menuItemId) === String(incoming.menuItemId));
+    const incomingSignature = customizationSignature(incoming.customizations);
+    const existing = order.items.find(
+      (i) =>
+        String(i.menuItemId) === String(incoming.menuItemId) &&
+        customizationSignature(i.customizations) === incomingSignature
+    );
     if (existing) {
       existing.quantity += incoming.quantity;
     } else {

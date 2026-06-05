@@ -53,6 +53,12 @@ function isStepDone(order, stepIndex) {
   return (STATUS_INDEX[order.status] || 0) > stepIndex;
 }
 
+function customizationText(customizations = {}) {
+  return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function StatusChip({ status }) {
   const served = status === 'daphucvu';
   const ready = status === 'chuanbiphucvu';
@@ -197,6 +203,11 @@ export default function CustomerSuccessPage() {
               >
                 <span className="text-sm text-[#1A0F00]">
                   <span className="font-semibold text-[#C8922A]">{it.quantity}×</span> {it.name}
+                  {customizationText(it.customizations) && (
+                    <span className="mt-0.5 block text-xs font-medium text-[#9C8472]">
+                      {customizationText(it.customizations)}
+                    </span>
+                  )}
                 </span>
                 <StatusChip status={it.status} />
               </div>

@@ -65,6 +65,12 @@ function ItemStatusBadge({ status }) {
   );
 }
 
+function customizationText(customizations = {}) {
+  return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function TableSelector() {
   const toast = useToast();
   const navigate = useNavigate();
@@ -282,6 +288,11 @@ function OrderScreen({ tableId }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <p className="font-medium text-sm">{i.name}</p>
+                    {customizationText(i.customizations) && (
+                      <p className="mt-1 text-xs font-medium text-text-muted">
+                        {customizationText(i.customizations)}
+                      </p>
+                    )}
                     <ItemStatusBadge status={i.status} />
                   </div>
                   <button className="text-text-muted hover:text-danger" onClick={() => removeItem(i)}>

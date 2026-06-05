@@ -90,6 +90,12 @@ const ITEM_STATUS_CLASSES = {
   daphucvu: 'bg-[#E8F5E9] text-[#2E7D32]',
 };
 
+const QUICK_OPTIONS = {
+  ice: ['Bình thường', 'Ít đá', 'Không đá'],
+  sugar: ['Bình thường', 'Ít đường', 'Không đường'],
+  sweetness: ['100% ngọt', '70% ngọt', '50% ngọt', '30% ngọt'],
+};
+
 const CUSTOMER_MENU_CSS = `
   .customer-category-scroll {
     scrollbar-width: none;
@@ -365,6 +371,12 @@ function ItemStatusPill({ status }) {
   );
 }
 
+function customizationText(customizations = {}) {
+  return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
+    .filter(Boolean)
+    .join(' · ');
+}
+
 function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName }) {
   if (!open) return null;
 
@@ -446,6 +458,11 @@ function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName })
                             <p className="line-clamp-1 text-sm font-bold text-[#3B2314]">
                               <span className="text-[#C89B3C]">{item.quantity}×</span> {item.name}
                             </p>
+                            {customizationText(item.customizations) && (
+                              <p className="mt-0.5 line-clamp-1 text-xs font-medium text-[#8A6F5D]">
+                                {customizationText(item.customizations)}
+                              </p>
+                            )}
                           </div>
                           <ItemStatusPill status={item.status} />
                         </div>
@@ -456,6 +473,130 @@ function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName })
               })}
             </div>
           )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function QuickOptionGroup({ label, value, options, onChange }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-extrabold text-[#3B2314]">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            className={`min-h-[40px] rounded-xl px-3 text-sm font-bold transition-colors ${
+              value === option
+                ? 'bg-[#C89B3C] text-white'
+                : 'border border-[#E3D3C4] bg-white text-[#5A4232]'
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuickCustomizeSheet({ item, open, onClose, onAdd }) {
+  const [options, setOptions] = useState({
+    ice: 'Bình thường',
+    sugar: 'Bình thường',
+    sweetness: '100% ngọt',
+    note: '',
+  });
+
+  useEffect(() => {
+    if (open) {
+      setOptions({
+        ice: 'Bình thường',
+        sugar: 'Bình thường',
+        sweetness: '100% ngọt',
+        note: '',
+      });
+    }
+  }, [open, item?._id]);
+
+  if (!open || !item) return null;
+
+  const submit = () => {
+    onAdd(item, {
+      ice: options.ice !== 'Bình thường' ? options.ice : '',
+      sugar: options.sugar !== 'Bình thường' ? options.sugar : '',
+      sweetness: options.sweetness !== '100% ngọt' ? options.sweetness : '',
+      note: options.note.trim(),
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        aria-label="Đóng tuỳ chọn món"
+        onClick={onClose}
+      />
+      <section className="relative max-h-[86vh] w-full overflow-y-auto rounded-t-[28px] bg-[#FAF6F1] p-4 shadow-2xl animate-slide-up">
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-[#D8C2AC]" />
+        <div className="overflow-hidden rounded-3xl bg-white shadow-[0_10px_24px_rgba(59,35,20,0.08)]">
+          <div className="relative h-36 bg-[#F4E6D4]">
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <CoffeeCupPlaceholder />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A160D]/85 to-transparent" />
+            <div className="absolute bottom-3 left-4 right-4">
+              <p className="line-clamp-1 text-xl font-black text-white">{item.name}</p>
+              <p className="mt-1 text-sm font-bold text-[#F8E8C2]">{formatVND(item.price)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <QuickOptionGroup
+            label="Đá"
+            value={options.ice}
+            options={QUICK_OPTIONS.ice}
+            onChange={(ice) => setOptions((prev) => ({ ...prev, ice }))}
+          />
+          <QuickOptionGroup
+            label="Đường"
+            value={options.sugar}
+            options={QUICK_OPTIONS.sugar}
+            onChange={(sugar) => setOptions((prev) => ({ ...prev, sugar }))}
+          />
+          <QuickOptionGroup
+            label="Độ ngọt"
+            value={options.sweetness}
+            options={QUICK_OPTIONS.sweetness}
+            onChange={(sweetness) => setOptions((prev) => ({ ...prev, sweetness }))}
+          />
+          <div>
+            <label className="mb-2 block text-sm font-extrabold text-[#3B2314]">Ghi chú thêm</label>
+            <input
+              value={options.note}
+              onChange={(e) => setOptions((prev) => ({ ...prev, note: e.target.value }))}
+              placeholder="Ví dụ: ít sữa, không topping..."
+              className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white px-4 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
+            />
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 -mx-4 mt-5 bg-[#FAF6F1] px-4 pb-2 pt-3">
+          <button
+            type="button"
+            onClick={submit}
+            className="min-h-[52px] w-full rounded-2xl bg-[#C89B3C] text-base font-black text-white shadow-[0_12px_26px_rgba(200,155,60,0.28)]"
+          >
+            + Thêm vào giỏ
+          </button>
         </div>
       </section>
     </div>
@@ -520,26 +661,30 @@ function ItemCard({ item, quantity, onAdd, onInc, onDec }) {
 
   return (
     <div
-      className={`relative flex h-[316px] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-colors ${
+      className={`relative flex h-[340px] flex-col overflow-hidden rounded-[22px] bg-white shadow-[0_10px_26px_rgba(59,35,20,0.10)] transition duration-300 active:scale-[0.99] ${
         flash ? 'ring-2 ring-[#C89B3C] cust-cart-flash' : ''
       }`}
     >
-      <div className="relative h-1/2 shrink-0 bg-[#F4E6D4]">
+      <div className="relative h-[56%] shrink-0 bg-[#F4E6D4]">
         {showImage ? (
           <img
             src={item.imageUrl}
             alt={item.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
             onError={() => setImageFailed(true)}
           />
         ) : (
           <CoffeeCupPlaceholder />
         )}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent" />
         {isNewItem(item) && (
-          <span className="absolute left-2 top-2 rounded-full bg-[#C89B3C] px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-[#C89B3C] px-2.5 py-1 text-[10px] font-black text-white shadow-lg">
             Mới
           </span>
         )}
+        <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#3B2314] shadow-md">
+          {item.category}
+        </span>
         {!available && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
             <span className="badge bg-[#FFEBEE] text-[#C62828]">Hết hàng</span>
@@ -547,11 +692,16 @@ function ItemCard({ item, quantity, onAdd, onInc, onDec }) {
         )}
       </div>
 
-      <div className="flex h-1/2 flex-col bg-white p-3">
+      <div className="flex flex-1 flex-col bg-white p-3">
         <p className="line-clamp-2 min-h-[2.45rem] text-sm font-bold leading-snug text-[#3B2314]">
           {item.name}
         </p>
-        <p className="mt-1 text-base font-bold text-[#C89B3C]">{formatVND(item.price)}</p>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="text-base font-black text-[#C89B3C]">{formatVND(item.price)}</p>
+          <span className="rounded-full bg-[#FFF3D8] px-2 py-1 text-[10px] font-bold text-[#C89B3C]">
+            Tùy chọn
+          </span>
+        </div>
         <div className="mt-auto">
           {!available ? (
             <button
@@ -581,9 +731,9 @@ function ItemCard({ item, quantity, onAdd, onInc, onDec }) {
           ) : (
             <button
               onClick={handleAdd}
-              className="min-h-[44px] w-full rounded-xl bg-[#C89B3C] px-3 py-2 text-sm font-bold text-white transition-transform active:scale-95"
+              className="min-h-[44px] w-full rounded-xl bg-[#C89B3C] px-3 py-2 text-sm font-black text-white shadow-[0_8px_18px_rgba(200,155,60,0.25)] transition-transform active:scale-95"
             >
-              + Thêm
+              + Tùy chọn nhanh
             </button>
           )}
         </div>
@@ -604,6 +754,7 @@ export default function CustomerMenuPage() {
   const [ordersOpen, setOrdersOpen] = useState(false);
   const [myOrders, setMyOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [customizeItem, setCustomizeItem] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -669,6 +820,10 @@ export default function CustomerMenuPage() {
     return (preferred.length ? preferred : pool).slice(0, 3);
   }, [allItems, cart.list]);
 
+  const addCustomizedItem = (item, customizations) => {
+    cart.add(item, customizations);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF6F1] pb-28 text-[#3B2314]">
       <style>{CUSTOMER_MENU_CSS}</style>
@@ -729,7 +884,7 @@ export default function CustomerMenuPage() {
       )}
       <CustomerWidgetStrip />
       <PromoCampaignStrip />
-      {!loading && <NewProductSpotlight items={featuredItems} onAdd={(item) => cart.add(item)} />}
+      {!loading && <NewProductSpotlight items={featuredItems} onAdd={(item) => setCustomizeItem(item)} />}
 
       <div className="sticky top-[104px] z-10 mt-0 border-b border-[#E2D3C3] bg-[#FAF6F1] px-3 py-2.5">
         <div className="customer-category-scroll flex w-full gap-2 overflow-x-auto">
@@ -762,7 +917,7 @@ export default function CustomerMenuPage() {
               key={item._id}
               item={item}
               quantity={cart.qtyOf(item._id)}
-              onAdd={() => cart.add(item)}
+              onAdd={() => setCustomizeItem(item)}
               onInc={() => cart.inc(item._id)}
               onDec={() => cart.dec(item._id)}
             />
@@ -802,6 +957,12 @@ export default function CustomerMenuPage() {
         tableName={table.tableName}
         onClose={() => setOrdersOpen(false)}
         onRefresh={loadMyOrders}
+      />
+      <QuickCustomizeSheet
+        open={Boolean(customizeItem)}
+        item={customizeItem}
+        onClose={() => setCustomizeItem(null)}
+        onAdd={addCustomizedItem}
       />
     </div>
   );

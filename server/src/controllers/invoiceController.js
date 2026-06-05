@@ -29,6 +29,7 @@ export const createInvoice = asyncHandler(async (req, res) => {
     name: i.name,
     price: i.price,
     quantity: i.quantity,
+    customizations: i.customizations || {},
   }));
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const vat = Math.round(subtotal * 0.1);

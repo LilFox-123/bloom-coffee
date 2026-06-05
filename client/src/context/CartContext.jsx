@@ -2,6 +2,20 @@ import { createContext, useContext, useState, useMemo, useCallback } from 'react
 
 const CartContext = createContext(null);
 
+function cleanCustomizations(customizations = {}) {
+  return Object.fromEntries(
+    Object.entries(customizations).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  );
+}
+
+function customizationSignature(customizations = {}) {
+  const clean = cleanCustomizations(customizations);
+  return Object.keys(clean)
+    .sort()
+    .map((key) => `${key}:${clean[key]}`)
+    .join('|');
+}
+
 export function CartProvider({ children }) {
   // items: { [menuItemId]: { menuItem, quantity } }
   const [items, setItems] = useState({});
@@ -11,43 +25,60 @@ export function CartProvider({ children }) {
   const [paymentMethod, setPaymentMethod] = useState('tienmat');
   const [tableNumber, setTableNumber] = useState('');
 
-  const add = useCallback((menuItem) => {
+  const resolveLineId = useCallback((prev, id) => {
+    if (prev[id]) return id;
+    return Object.keys(prev).find((key) => String(prev[key].menuItem._id) === String(id));
+  }, []);
+
+  const add = useCallback((menuItem, customizations = {}) => {
+    const cleanOptions = cleanCustomizations(customizations);
+    const signature = customizationSignature(cleanOptions);
+    const lineId = signature ? `${menuItem._id}:${signature}` : String(menuItem._id);
     setItems((prev) => {
-      const cur = prev[menuItem._id];
+      const cur = prev[lineId];
       return {
         ...prev,
-        [menuItem._id]: { menuItem, quantity: (cur?.quantity || 0) + 1 },
+        [lineId]: {
+          lineId,
+          menuItem,
+          customizations: cleanOptions,
+          quantity: (cur?.quantity || 0) + 1,
+        },
       };
     });
   }, []);
 
   const inc = useCallback((id) => {
     setItems((prev) => {
-      if (!prev[id]) return prev;
-      return { ...prev, [id]: { ...prev[id], quantity: prev[id].quantity + 1 } };
+      const lineId = resolveLineId(prev, id);
+      if (!lineId) return prev;
+      return { ...prev, [lineId]: { ...prev[lineId], quantity: prev[lineId].quantity + 1 } };
     });
-  }, []);
+  }, [resolveLineId]);
 
   const dec = useCallback((id) => {
     setItems((prev) => {
-      const cur = prev[id];
+      const lineId = resolveLineId(prev, id);
+      const cur = lineId ? prev[lineId] : null;
       if (!cur) return prev;
       if (cur.quantity <= 1) {
         const next = { ...prev };
-        delete next[id];
+        delete next[lineId];
         return next;
       }
-      return { ...prev, [id]: { ...cur, quantity: cur.quantity - 1 } };
+      return { ...prev, [lineId]: { ...cur, quantity: cur.quantity - 1 } };
     });
-  }, []);
+  }, [resolveLineId]);
 
   const remove = useCallback((id) => {
     setItems((prev) => {
+      const lineId = resolveLineId(prev, id);
+      if (!lineId) return prev;
       const next = { ...prev };
-      delete next[id];
+      delete next[lineId];
       return next;
     });
-  }, []);
+  }, [resolveLineId]);
 
   const clear = useCallback(() => {
     setItems({});
@@ -63,7 +94,14 @@ export function CartProvider({ children }) {
   const vat = useMemo(() => Math.round(subtotal * 0.1), [subtotal]);
   const total = useMemo(() => subtotal + vat, [subtotal, vat]);
 
-  const qtyOf = useCallback((id) => items[id]?.quantity || 0, [items]);
+  const qtyOf = useCallback(
+    (id) =>
+      Object.values(items).reduce(
+        (sum, row) => sum + (String(row.menuItem._id) === String(id) ? row.quantity : 0),
+        0
+      ),
+    [items]
+  );
 
   const value = {
     items,
