@@ -4,10 +4,11 @@ import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { EmptyState } from '../components/ui';
-import { IconSearch, IconPlus, IconQr, IconCart, IconReceipt, IconTable } from '../components/Icons';
+import { IconSearch, IconPlus, IconQr, IconCart, IconReceipt, IconTable, IconEdit, IconTrash } from '../components/Icons';
 import TableCard from '../components/TableCard';
 import Modal from '../components/Modal';
 import QrCodeModal from '../components/QrCodeModal';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const FILTERS = [
   { key: 'all', label: 'Tất cả' },
@@ -68,7 +69,8 @@ function FlowGuide() {
 }
 
 export default function Tables() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const toast = useToast();
   const navigate = useNavigate();
   const [tables, setTables] = useState([]);
@@ -83,6 +85,8 @@ export default function Tables() {
   const [form, setForm] = useState({ name: '', capacity: 4, zone: 'Trong nhà' });
   const [errors, setErrors] = useState({});
   const [qrTable, setQrTable] = useState(null);
+  const [editingTable, setEditingTable] = useState(null);
+  const [deleteTable, setDeleteTable] = useState(null);
   const [transferModal, setTransferModal] = useState(null);
   const [targetTableId, setTargetTableId] = useState('');
   const [transferring, setTransferring] = useState(false);
@@ -129,6 +133,20 @@ export default function Tables() {
     () => tables.filter((t) => t.status === 'trong' && t._id !== transferModal?._id),
     [tables, transferModal]
   );
+
+  const openAdd = () => {
+    setEditingTable(null);
+    setForm({ name: '', capacity: 4, zone: 'Trong nhà' });
+    setErrors({});
+    setModal(true);
+  };
+
+  const openEdit = (table) => {
+    setEditingTable(table);
+    setForm({ name: table.name || '', capacity: table.capacity || 4, zone: table.zone || 'Trong nhà' });
+    setErrors({});
+    setModal(true);
+  };
 
   const openSeat = (table) => {
     setSeatModal(table);
@@ -182,10 +200,27 @@ export default function Tables() {
     setErrors(errs);
     if (Object.keys(errs).length) return;
     try {
-      await api.post('/tables', { ...form, capacity: Number(form.capacity) });
-      toast.success('Đã thêm bàn mới');
+      if (editingTable) {
+        await api.patch(`/tables/${editingTable._id}`, { ...form, capacity: Number(form.capacity) });
+        toast.success('Đã cập nhật bàn');
+      } else {
+        await api.post('/tables', { ...form, capacity: Number(form.capacity) });
+        toast.success('Đã thêm bàn mới');
+      }
       setModal(false);
+      setEditingTable(null);
       setForm({ name: '', capacity: 4, zone: 'Trong nhà' });
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const deleteSelectedTable = async (table) => {
+    if (!table) return;
+    try {
+      await api.delete(`/tables/${table._id}`);
+      toast.success('Đã xóa bàn');
       load();
     } catch (err) {
       toast.error(err.message);
@@ -215,7 +250,7 @@ export default function Tables() {
                 {refreshing ? 'Đang cập nhật...' : 'Làm mới'}
               </button>
               {isAdmin && (
-                <button className="btn-primary" onClick={() => setModal(true)}>
+                <button className="btn-primary" onClick={openAdd}>
                   <IconPlus width={18} height={18} /> Thêm bàn
                 </button>
               )}
@@ -309,14 +344,38 @@ export default function Tables() {
                   </button>
                 </div>
               )}
-              <button
-                onClick={() => setQrTable(t)}
-                title="Mã QR gọi món"
-                aria-label="Mã QR gọi món"
-                className="inline-flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl text-xs font-bold text-[#8A6F5D] transition-colors hover:bg-[#FAF6F1] hover:text-[#C89B3C]"
-              >
-                <IconQr width={16} height={16} /> QR Code
-              </button>
+              <div className={`grid gap-2 ${isAdmin ? 'grid-cols-[1fr_44px_44px]' : 'grid-cols-1'}`}>
+                <button
+                  onClick={() => setQrTable(t)}
+                  title="Mã QR gọi món"
+                  aria-label={`Mã QR gọi món ${t.name}`}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl text-xs font-bold text-[#8A6F5D] transition-colors hover:bg-[#FAF6F1] hover:text-[#C89B3C]"
+                >
+                  <IconQr width={16} height={16} /> QR Code
+                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(t)}
+                      title="Sửa"
+                      aria-label={`Sửa ${t.name}`}
+                      className="flex min-h-[44px] items-center justify-center rounded-xl border border-[#E1CDB9] bg-white text-[#6B4B37] transition hover:border-[#C89B3C] hover:bg-[#FFF3D8]"
+                    >
+                      <IconEdit width={17} height={17} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTable(t)}
+                      title="Xóa"
+                      aria-label={`Xóa ${t.name}`}
+                      className="flex min-h-[44px] items-center justify-center rounded-xl border border-[#F3C2BA] bg-[#FFEBEE] text-[#C62828] transition hover:bg-[#FEE2E2]"
+                    >
+                      <IconTrash width={17} height={17} />
+                    </button>
+                  </>
+                )}
+              </div>
             </TableCard>
           ))}
         </div>
@@ -403,7 +462,14 @@ export default function Tables() {
         </div>
       </Modal>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Thêm bàn mới">
+      <Modal
+        open={modal}
+        onClose={() => {
+          setModal(false);
+          setEditingTable(null);
+        }}
+        title={editingTable ? 'Sửa bàn' : 'Thêm bàn mới'}
+      >
         <form onSubmit={submit} className="space-y-4" noValidate>
           <div>
             <label className="label">Tên bàn</label>
@@ -435,7 +501,14 @@ export default function Tables() {
             </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" className="btn-secondary" onClick={() => setModal(false)}>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setModal(false);
+                setEditingTable(null);
+              }}
+            >
               Hủy
             </button>
             <button type="submit" className="btn-primary">
@@ -446,6 +519,12 @@ export default function Tables() {
       </Modal>
 
       <QrCodeModal open={!!qrTable} onClose={() => setQrTable(null)} table={qrTable} />
+      <ConfirmDialog
+        open={!!deleteTable}
+        onClose={() => setDeleteTable(null)}
+        onConfirm={() => deleteSelectedTable(deleteTable)}
+        message={`Xóa bàn ${deleteTable?.name}? Hành động này không thể hoàn tác.`}
+      />
     </>
   );
 }

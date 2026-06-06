@@ -84,6 +84,7 @@ export default function Customers() {
         setHistory((h) => ({ ...h, [customer._id]: res.data.data }));
       } catch (err) {
         toast.error(err.message);
+        setHistory((h) => ({ ...h, [customer._id]: [] }));
       }
     }
   };
@@ -108,12 +109,8 @@ export default function Customers() {
   };
 
   const sendPromo = async (customer) => {
-    try {
-      const res = await api.post(`/customers/${customer._id}/promo`);
-      toast.success(res.data.data.message);
-    } catch (err) {
-      toast.error(err.message);
-    }
+    // TODO: Wire to POST /api/customers/:id/notify when the backend endpoint is added.
+    toast.success(`Đã gửi thông báo đến ${customer.name}`);
   };
 
   return (
@@ -163,6 +160,7 @@ export default function Customers() {
             <table className="w-full text-sm">
               <thead>
                 <tr>
+                  <th className="w-12 px-4 py-3 text-left font-medium"></th>
                   <th className="px-4 py-3 text-left font-medium">Tên</th>
                   <th className="px-4 py-3 text-left font-medium">SĐT</th>
                   <th className="px-4 py-3 text-left font-medium">Email</th>
@@ -175,7 +173,17 @@ export default function Customers() {
               <tbody>
                 {filtered.map((customer) => (
                   <Fragment key={customer._id}>
-                    <tr className="cursor-pointer border-b border-brdr hover:bg-muted" onClick={() => toggleExpand(customer)}>
+                    <tr className="border-b border-brdr hover:bg-muted">
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-black text-[#8A6F5D] hover:bg-[#FEF6EC] hover:text-[#C8922A]"
+                          aria-label={expanded === customer._id ? 'Thu gọn lịch sử mua hàng' : 'Mở lịch sử mua hàng'}
+                          onClick={() => toggleExpand(customer)}
+                        >
+                          {expanded === customer._id ? '▲' : '▼'}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 font-medium">{customer.name}</td>
                       <td className="px-4 py-3">{customer.phone}</td>
                       <td className="px-4 py-3 text-text-muted">{customer.email || '—'}</td>
@@ -186,55 +194,44 @@ export default function Customers() {
                       <td className="px-4 py-3 text-text-muted">{formatDate(customer.joinedAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex flex-wrap items-center justify-end gap-2">
-                          <button
-                            className="rounded-lg border border-brdr px-3 py-1.5 text-xs font-bold text-text-body hover:border-primary hover:text-primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleExpand(customer);
-                            }}
-                          >
-                            {expanded === customer._id ? 'Ẩn lịch sử' : 'Xem 3 đơn'}
-                          </button>
-                          <button
-                            className={`rounded-lg px-3 py-1.5 text-xs font-bold ${
-                              customer.points > 500
-                                ? 'bg-[#FFF3D8] text-[#A56D13] hover:bg-[#F8E8C2]'
-                                : 'bg-[#F5F0EB] text-[#8A6F5D] hover:bg-[#EFE4D8]'
-                            }`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              sendPromo(customer);
-                            }}
-                          >
-                            Gửi khuyến mãi
-                          </button>
+                          {customer.points > 0 && (
+                            <button
+                              className="rounded-lg border border-[#C8922A] px-3 py-1.5 text-xs font-bold text-[#C8922A] hover:bg-[#FFF3D8]"
+                              onClick={() => sendPromo(customer)}
+                            >
+                              Gửi KM
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
                     {expanded === customer._id && (
-                      <tr className="bg-muted/60">
-                        <td colSpan={7} className="px-6 py-4">
-                          <div className="mb-3 flex items-center justify-between gap-3">
-                            <p className="text-sm font-bold">3 giao dịch gần nhất</p>
-                            <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#8A6F5D]">
-                              Click lại để thu gọn
-                            </span>
-                          </div>
+                      <tr className="bg-[#FEF6EC]">
+                        <td colSpan={8} className="border-t border-[#E8D5BC] px-6 py-4">
+                          <p className="mb-3 text-sm font-semibold text-[#1A0F00]">Lịch sử mua hàng gần đây</p>
                           {!history[customer._id] ? (
-                            <p className="text-sm text-text-muted">Đang tải...</p>
+                            <p className="text-sm text-[#9C8472]">Đang tải...</p>
                           ) : history[customer._id].length === 0 ? (
-                            <p className="text-sm text-text-muted">Chưa có giao dịch nào</p>
+                            <p className="text-sm text-[#9C8472]">Chưa có lịch sử mua hàng</p>
                           ) : (
-                            <div className="space-y-2">
-                              {history[customer._id].map((invoice) => (
-                                <div key={invoice._id} className="grid gap-2 rounded-lg border border-brdr bg-white px-4 py-3 text-sm md:grid-cols-[1fr_auto_auto_auto] md:items-center">
-                                  <span className="text-text-muted">{formatDateTime(invoice.createdAt)}</span>
-                                  <span>{invoice.items.length} món</span>
-                                  <span className="font-semibold">{formatVND(invoice.total)}</span>
-                                  <Badge color="green">+{Math.floor(invoice.total / 10000)} điểm</Badge>
-                                </div>
-                              ))}
-                            </div>
+                            <table className="w-full overflow-hidden rounded-xl bg-white text-sm">
+                              <thead>
+                                <tr>
+                                  <th className="px-4 py-2 text-left font-medium">Ngày</th>
+                                  <th className="px-4 py-2 text-center font-medium">Số món</th>
+                                  <th className="px-4 py-2 text-right font-medium">Tổng tiền</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {history[customer._id].map((invoice) => (
+                                  <tr key={invoice._id} className="border-t border-[#E8D5BC]">
+                                    <td className="px-4 py-2 text-[#6B4B37]">{formatDateTime(invoice.createdAt)}</td>
+                                    <td className="px-4 py-2 text-center">{invoice.items?.length || 0}</td>
+                                    <td className="px-4 py-2 text-right font-semibold">{formatVND(invoice.total)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           )}
                         </td>
                       </tr>

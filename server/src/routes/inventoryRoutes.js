@@ -26,7 +26,16 @@ router.post(
   validate,
   createInventory
 );
-router.patch('/:id', updateInventory);
+router.patch(
+  '/:id',
+  [
+    body('quantity').optional().isInt({ min: 0 }),
+    body('minThreshold').optional().isInt({ min: 0 }),
+    body('name').optional().isString().trim().notEmpty(),
+  ],
+  validate,
+  updateInventory
+);
 router.delete('/:id', deleteInventory);
 
 router.get('/transactions/all', listTransactions);

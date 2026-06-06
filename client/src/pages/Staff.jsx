@@ -45,11 +45,17 @@ function StaffCard({ user, onEdit, onToggle }) {
           </div>
         </div>
         <div className="flex shrink-0 gap-1">
-          <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#6B4B37] hover:bg-[#FFF3D8]" title="Sửa" onClick={() => onEdit(user)}>
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FAF6F1] text-[#6B4B37] hover:bg-[#FFF3D8]"
+            aria-label={`Sửa nhân viên ${user.name}`}
+            title="Sửa"
+            onClick={() => onEdit(user)}
+          >
             <IconEdit width={17} height={17} />
           </button>
           <button
             className={`flex h-9 w-9 items-center justify-center rounded-xl ${active ? 'bg-[#FFEBEE] text-[#C62828]' : 'bg-[#E8F5E9] text-[#2E7D32]'}`}
+            aria-label={active ? `Khóa nhân viên ${user.name}` : `Mở khóa nhân viên ${user.name}`}
             title={active ? 'Khóa' : 'Mở khóa'}
             onClick={() => onToggle(user)}
           >

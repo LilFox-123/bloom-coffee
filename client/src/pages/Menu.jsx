@@ -162,6 +162,7 @@ function MenuCard({ item, isAdmin, onEdit, onDelete, onToggle }) {
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-[#6B4B37] shadow-sm transition hover:bg-[#C89B3C] hover:text-white"
               onClick={() => onEdit(item)}
+              title="Sửa"
               aria-label={`Sửa ${item.name}`}
             >
               <IconEdit width={16} height={16} />
@@ -169,6 +170,7 @@ function MenuCard({ item, isAdmin, onEdit, onDelete, onToggle }) {
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-[#6B4B37] shadow-sm transition hover:bg-[#EF4444] hover:text-white"
               onClick={() => onDelete(item)}
+              title="Xóa"
               aria-label={`Xóa ${item.name}`}
             >
               <IconTrash width={16} height={16} />

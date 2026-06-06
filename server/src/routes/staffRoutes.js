@@ -25,7 +25,17 @@ router.post(
   validate,
   createStaff
 );
-router.patch('/:id', updateStaff);
+router.patch(
+  '/:id',
+  [
+    body('name').optional().isString().trim().notEmpty(),
+    body('phone').optional().isMobilePhone('vi-VN'),
+    body('role').optional().isIn(['admin', 'nhanvien']),
+    body('isActive').optional().isBoolean(),
+  ],
+  validate,
+  updateStaff
+);
 router.patch('/:id/toggle', toggleStaff);
 router.delete('/:id', deleteStaff);
 

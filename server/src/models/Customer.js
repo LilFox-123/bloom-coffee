@@ -12,4 +12,7 @@ const customerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+customerSchema.index({ phone: 1 });
+customerSchema.index({ name: 'text' });
+
 export default mongoose.model('Customer', customerSchema);

@@ -209,6 +209,11 @@
     transform: translateX(0);
   }
 }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* "Còn hàng" badge — pulsing dot */
 .badge-available {
@@ -347,29 +352,63 @@
 
 /* Print: chỉ hiện nội dung hóa đơn */
 @media print {
+  nav,
+  aside,
+  [class*='sidebar'],
+  [class*='Sidebar'],
+  header,
+  [class*='header'],
+  [class*='Header'],
+  .no-print,
+  button,
+  .action-buttons {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0;
+  }
+
   body * {
     visibility: hidden;
   }
-  #print-area,
-  #print-area * {
+
+  [class*='invoice-detail'],
+  [class*='InvoiceDetail'],
+  .print-area,
+  .print-area * {
     visibility: visible;
   }
-  #print-area {
+
+  [class*='invoice-detail'],
+  [class*='InvoiceDetail'],
+  .print-area {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
     padding: 24px;
   }
-  /* keep printed receipts light */
-  #print-area table thead {
+
+  * {
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-size: 14pt;
+  }
+
+  .invoice-item-row {
+    page-break-inside: avoid;
+  }
+
+  .print-area table thead {
     background: #fff !important;
-  }
-  #print-area table thead th {
-    color: #000 !important;
-  }
-  .no-print {
-    display: none !important;
   }
 }
 

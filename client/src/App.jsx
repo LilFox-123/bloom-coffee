@@ -1,18 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/Guards';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Tables from './pages/Tables';
-import Order from './pages/Order';
-import Menu from './pages/Menu';
-import Invoices from './pages/Invoices';
-import Customers from './pages/Customers';
-import Staff from './pages/Staff';
-import Inventory from './pages/Inventory';
-import Reports from './pages/Reports';
 
 import CustomerLayout from './pages/customer/CustomerLayout';
 import CustomerMenuPage from './pages/customer/CustomerMenuPage';
@@ -25,6 +17,16 @@ import OnlineMenuPage from './pages/customer/online/OnlineMenuPage';
 import OnlineConfirmPage from './pages/customer/online/OnlineConfirmPage';
 import OnlineSuccessPage from './pages/customer/online/OnlineSuccessPage';
 
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Tables = lazy(() => import('./pages/Tables'));
+const Order = lazy(() => import('./pages/Order'));
+const Menu = lazy(() => import('./pages/Menu'));
+const Invoices = lazy(() => import('./pages/Invoices'));
+const Customers = lazy(() => import('./pages/Customers'));
+const Staff = lazy(() => import('./pages/Staff'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Reports = lazy(() => import('./pages/Reports'));
+
 function HomeRedirect() {
   const { user } = useAuth();
   return <Navigate to={user?.role === 'admin' ? '/dashboard' : '/ban'} replace />;
@@ -32,7 +34,12 @@ function HomeRedirect() {
 
 export default function App() {
   return (
-    <Routes>
+    <Suspense fallback={
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #E8D5BC', borderTopColor: '#C8922A', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    }>
+      <Routes>
       <Route path="/login" element={<Login />} />
 
       {/* Public single-link online ordering (no auth, no table required).
@@ -71,6 +78,7 @@ export default function App() {
         <Route path="/bao-cao" element={<AdminRoute><Reports /></AdminRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

@@ -23,7 +23,15 @@ router.post(
   validate,
   addItem
 );
-router.patch('/:id/items/:itemId', updateItem);
+router.patch(
+  '/:id/items/:itemId',
+  [
+    body('quantity').optional().isInt({ min: 0 }),
+    body('status').optional().isIn(['dangphache', 'chuanbiphucvu', 'daphucvu']),
+  ],
+  validate,
+  updateItem
+);
 router.delete('/:id/items/:itemId', removeItem);
 router.patch('/:id/status', updateOrderStatus);
 router.patch('/:id/save', saveOrder);

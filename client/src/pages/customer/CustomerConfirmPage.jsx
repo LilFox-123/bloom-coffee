@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { useCart } from '../../context/CartContext';
 import { useTable } from './CustomerLayout';
+import { useToast } from '../../context/ToastContext';
 import { formatVND } from '../../utils/format';
 import { Spinner } from '../../components/ui';
 import PaymentMethodCard from '../../components/customer/PaymentMethodCard';
@@ -183,6 +184,7 @@ export default function CustomerConfirmPage() {
   const navigate = useNavigate();
   const { table } = useTable();
   const cart = useCart();
+  const toast = useToast();
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -202,7 +204,10 @@ export default function CustomerConfirmPage() {
       .then((res) => {
         if (active) setCategories(res.data.data.categories || []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('[CustomerConfirmPage] Failed to load recommendations:', err.message);
+        // keep recommendations empty -- non-critical feature, silent fail is acceptable but should be logged
+      });
     return () => {
       active = false;
     };
@@ -302,19 +307,25 @@ export default function CustomerConfirmPage() {
   const createOrder = async () => {
     const promoNote = appliedPromoCode ? `Mã khuyến mãi: ${appliedPromoCode}` : '';
     const notes = [cart.notes, promoNote].filter(Boolean).join(' | ');
-    const res = await api.post('/public/order', {
-      tableId,
-      customerName: cart.customerName || undefined,
-      customerId: cart.memberCustomer?._id || undefined,
-      notes: notes || undefined,
-      paymentMethod: method,
-      items: cart.list.map((r) => ({
-        menuItemId: r.menuItem._id,
-        quantity: r.quantity,
-        customizations: r.customizations || {},
-      })),
-    });
-    return res.data.data.orderId;
+    try {
+      const res = await api.post('/public/order', {
+        tableId,
+        customerName: cart.customerName || undefined,
+        customerId: cart.memberCustomer?._id || undefined,
+        notes: notes || undefined,
+        paymentMethod: method,
+        items: cart.list.map((r) => ({
+          menuItemId: r.menuItem._id,
+          quantity: r.quantity,
+          customizations: r.customizations || {},
+        })),
+      });
+      return res.data.data.orderId;
+    } catch (err) {
+      toast.error('Không thể đặt món. Vui lòng thử lại hoặc gọi nhân viên.');
+      setSubmitting(false);
+      throw err;
+    }
   };
 
   const submit = async () => {

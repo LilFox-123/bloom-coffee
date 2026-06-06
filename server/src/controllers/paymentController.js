@@ -101,9 +101,12 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Thiếu thông tin thanh toán' });
   }
 
-  const partnerCode = process.env.MOMO_PARTNER_CODE || 'MOMOTEST';
-  const accessKey = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
-  const secretKey = process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+  const partnerCode = process.env.MOMO_PARTNER_CODE;
+  const accessKey = process.env.MOMO_ACCESS_KEY;
+  const secretKey = process.env.MOMO_SECRET_KEY;
+  if (!partnerCode || !accessKey || !secretKey) {
+    return res.status(503).json({ success: false, message: 'Dịch vụ thanh toán MoMo chưa được cấu hình.' });
+  }
   const requestId = `${orderId}_${Date.now()}`;
   const requestType = 'captureWallet';
   const extraData = '';
@@ -125,9 +128,7 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
     requestId,
     requestType,
   });
-  console.log('[MoMo] rawSignature:', rawSignature);
   const signature = hmacSha256(rawSignature, secretKey);
-  console.log('[MoMo] signature:', signature);
 
   const body = {
     partnerCode,
@@ -144,7 +145,6 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
     requestType,
     signature,
   };
-  console.log('[MoMo] requestBody:', JSON.stringify(body, null, 2));
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -157,16 +157,12 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
       signal: controller.signal,
     });
     const data = await momoRes.json();
-    console.log('[MoMo] responseStatus:', momoRes.status);
-    console.log('[MoMo] responseBody:', JSON.stringify(data, null, 2));
     if (data.resultCode !== 0 || !data.payUrl) {
-      console.error('MoMo payment failed:', data);
       return res.json({ success: false, message: data.message || 'MoMo từ chối giao dịch' });
     }
     res.json({ success: true, payUrl: data.payUrl, data: { payUrl: data.payUrl } });
-  } catch (err) {
-    console.error('[MoMo] fetchError:', err.name, err.message, err.cause ?? '');
-    console.error('MoMo network error:', err.message);
+  } catch (error) {
+    console.error('[payment] MoMo request failed:', error.message);
     res.json({ success: false, message: 'Không thể kết nối MoMo, vui lòng thử lại' });
   } finally {
     clearTimeout(timeout);
@@ -176,8 +172,11 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
 // POST /api/payment/momo/ipn
 export const handleMoMoIpn = asyncHandler(async (req, res) => {
   const { signature, resultCode, orderId } = req.body;
-  const accessKey = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
-  const secretKey = process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+  const accessKey = process.env.MOMO_ACCESS_KEY;
+  const secretKey = process.env.MOMO_SECRET_KEY;
+  if (!accessKey || !secretKey) {
+    return res.status(503).json({ success: false, message: 'Dịch vụ thanh toán MoMo chưa được cấu hình.' });
+  }
   const expectedSignature = hmacSha256(buildMoMoIpnRawSignature(req.body, accessKey), secretKey);
 
   if (!safeEqual(signature, expectedSignature)) {
@@ -203,8 +202,7 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
   const vnpUrl = process.env.VNPAY_URL || VNPAY_DEFAULT_URL;
 
   if (!tmnCode || !secretKey) {
-    console.error('[VNPay] Missing VNPAY_TMN_CODE or VNPAY_HASH_SECRET');
-    return res.status(500).json({ success: false, message: 'Thiếu cấu hình VNPay sandbox' });
+    return res.status(503).json({ success: false, message: 'Dịch vụ thanh toán VNPay chưa được cấu hình.' });
   }
 
   const ipAddr =
@@ -217,20 +215,6 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
   const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
   const createDate = vnpDate(vnTime);
 
-  console.log('[VNPay] paramsBeforeSort:', JSON.stringify({
-    vnp_Amount: Math.round(Number(amount) * 100),
-    vnp_Command: 'pay',
-    vnp_CreateDate: createDate,
-    vnp_CurrCode: 'VND',
-    vnp_IpAddr: ipAddr,
-    vnp_Locale: 'vn',
-    vnp_OrderInfo: orderInfo || `Thanh toan Bloom Coffee ${orderId}`,
-    vnp_OrderType: 'other',
-    vnp_ReturnUrl: returnUrl,
-    vnp_TmnCode: tmnCode,
-    vnp_TxnRef: String(orderId),
-    vnp_Version: '2.1.0',
-  }, null, 2));
   const vnpParams = sortVnpParams({
     vnp_Amount: Math.round(Number(amount) * 100),
     vnp_Command: 'pay',
@@ -247,10 +231,8 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
   });
 
   const signData = buildVnpQuery(vnpParams);
-  console.log('[VNPay] signData:', signData);
   const secureHash = hmacSha512(signData, secretKey);
   const payUrl = `${vnpUrl}?${signData}&vnp_SecureHash=${secureHash}`;
-  console.log('[VNPay] payUrl:', payUrl.substring(0, 200));
 
   res.json({ success: true, payUrl, data: { payUrl } });
 });

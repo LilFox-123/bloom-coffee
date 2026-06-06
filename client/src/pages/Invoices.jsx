@@ -147,21 +147,32 @@ export default function Invoices() {
                     <td className="px-4 py-3 text-text-muted whitespace-nowrap hidden lg:table-cell">{formatDateTime(inv.createdAt)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="text-text-muted hover:text-accent-green-dark" title="Xem" onClick={() => setDetail(inv)}>
+                        <button
+                          className="text-text-muted hover:text-accent-green-dark"
+                          aria-label="Xem chi tiết hóa đơn"
+                          title="Xem"
+                          onClick={() => setDetail(inv)}
+                        >
                           <IconEye width={18} height={18} />
                         </button>
                         <button
                           className="text-text-muted hover:text-info"
+                          aria-label="In hóa đơn"
                           title="In"
                           onClick={() => {
                             setDetail(inv);
-                            setTimeout(() => window.print(), 300);
+                            setTimeout(() => window.print(), 100);
                           }}
                         >
                           <IconPrint width={18} height={18} />
                         </button>
                         {isAdmin && (
-                          <button className="text-text-muted hover:text-danger" title="Xóa" onClick={() => setConfirm(inv)}>
+                          <button
+                            className="text-text-muted hover:text-danger"
+                            aria-label="Xóa hóa đơn"
+                            title="Xóa"
+                            onClick={() => setConfirm(inv)}
+                          >
                             <IconTrash width={18} height={18} />
                           </button>
                         )}
@@ -178,7 +189,7 @@ export default function Invoices() {
       <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết hóa đơn" maxWidth="max-w-xl">
         {detail && (
           <>
-            <div id="print-area">
+            <div id="print-area" className="print-area invoice-detail">
               <div className="flex items-center gap-3 border-b border-brdr pb-4 mb-4">
                 <Logo size={48} />
                 <div>
@@ -212,7 +223,7 @@ export default function Invoices() {
                 </thead>
                 <tbody>
                   {detail.items.map((it, i) => (
-                    <tr key={i} className="border-b border-brdr">
+                    <tr key={i} className="invoice-item-row border-b border-brdr">
                       <td className="px-3 py-2">{it.name}</td>
                       <td className="px-3 py-2 text-center">{it.quantity}</td>
                       <td className="px-3 py-2 text-right">{formatVND(it.price)}</td>
@@ -243,7 +254,7 @@ export default function Invoices() {
               <button className="btn-secondary" onClick={() => setDetail(null)}>
                 Đóng
               </button>
-              <button className="btn-primary" onClick={() => window.print()}>
+              <button className="btn-primary" onClick={() => setTimeout(() => window.print(), 100)}>
                 <IconPrint width={18} height={18} /> In hóa đơn
               </button>
             </div>

@@ -77,10 +77,18 @@ function StockCard({ item, onEdit, onDelete }) {
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <button className="min-h-[42px] rounded-xl border border-[#E8D5BC] bg-[#FAF6F1] text-sm font-black text-[#3B2314] hover:border-[#C89B3C]" onClick={() => onEdit(item)}>
+        <button
+          className="min-h-[42px] rounded-xl border border-[#E8D5BC] bg-[#FAF6F1] text-sm font-black text-[#3B2314] hover:border-[#C89B3C]"
+          aria-label={`Sửa nguyên liệu ${item.name}`}
+          onClick={() => onEdit(item)}
+        >
           <IconEdit width={16} height={16} className="mr-1 inline" /> Sửa
         </button>
-        <button className="min-h-[42px] rounded-xl border border-[#F3C2BA] bg-[#FFEBEE] text-sm font-black text-[#C62828]" onClick={() => onDelete(item)}>
+        <button
+          className="min-h-[42px] rounded-xl border border-[#F3C2BA] bg-[#FFEBEE] text-sm font-black text-[#C62828]"
+          aria-label={`Xóa nguyên liệu ${item.name}`}
+          onClick={() => onDelete(item)}
+        >
           <IconTrash width={16} height={16} className="mr-1 inline" /> Xóa
         </button>
       </div>

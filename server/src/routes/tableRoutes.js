@@ -32,7 +32,16 @@ router.patch(
   validate,
   transferTableOrder
 );
-router.patch('/:id', updateTable);
+router.patch(
+  '/:id',
+  [
+    body('status').optional().isIn(['trong', 'dangdung', 'ghepban']),
+    body('capacity').optional().isInt({ min: 1, max: 50 }),
+    body('name').optional().isString().trim().notEmpty(),
+  ],
+  validate,
+  updateTable
+);
 router.delete('/:id', requireAdmin, deleteTable);
 
 export default router;
