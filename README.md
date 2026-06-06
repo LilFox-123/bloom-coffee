@@ -2,7 +2,8 @@
 
 Bloom Coffee là hệ thống quản lý quán cà phê full-stack, được xây dựng cho mô hình vận hành tại quán: khách quét QR để gọi món tại bàn, nhân viên theo dõi đơn theo thời gian xử lý, quản trị viên quản lý thực đơn, bàn, kho, hóa đơn, khách hàng và báo cáo doanh thu.
 
-> Slogan: Quản lý thông minh - Phục vụ tận tâm
+<img width="2542" height="1271" alt="image" src="https://github.com/user-attachments/assets/7dc4ce28-ecd9-4b78-8d34-3df4b7d238a0" />
+
 
 ## Mục lục
 
