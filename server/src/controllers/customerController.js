@@ -45,5 +45,5 @@ export const deleteCustomer = asyncHandler(async (req, res) => {
 export const sendPromo = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.params.id);
   if (!customer) return res.status(404).json({ success: false, message: 'Không tìm thấy khách hàng' });
-  res.json({ success: true, data: { message: `Đã gửi thông báo cho ${customer.name}` } });
+  return res.json({ success: true, message: 'Đã gửi thông báo' });
 });

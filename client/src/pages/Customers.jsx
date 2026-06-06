@@ -109,8 +109,12 @@ export default function Customers() {
   };
 
   const sendPromo = async (customer) => {
-    // TODO: Wire to POST /api/customers/:id/notify when the backend endpoint is added.
-    toast.success(`Đã gửi thông báo đến ${customer.name}`);
+    try {
+      await api.post(`/customers/${customer._id}/promo`);
+      toast.success(`Đã gửi thông báo khuyến mãi đến ${customer.name || customer.phone}`);
+    } catch (err) {
+      toast.error('Không thể gửi thông báo. Vui lòng thử lại.');
+    }
   };
 
   return (

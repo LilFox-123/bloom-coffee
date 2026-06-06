@@ -233,6 +233,7 @@ export const inventoryReport = asyncHandler(async (req, res) => {
       name: it.name,
       unit: it.unit,
       stock: it.quantity,
+      minThreshold: it.minThreshold,
       imported: 0,
       exported: 0,
     });

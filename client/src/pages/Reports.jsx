@@ -107,14 +107,12 @@ function ChartEmptyState({ title }) {
   );
 }
 
-function InventoryStatusBadge({ stock, threshold }) {
-  if (threshold === undefined || threshold === null) {
-    return <span className="badge bg-[#F5F0EB] text-[#9C8472]">Đang theo dõi</span>;
-  }
-  if (Number(stock) <= Number(threshold)) {
-    return <span className="badge bg-[#FFEBEE] text-[#C62828]">Cần nhập</span>;
-  }
-  return <span className="badge bg-[#E8F5E9] text-[#2E7D32]">Ổn định</span>;
+function getInventoryStatus(item) {
+  const quantity = Number(item.stock ?? item.quantity ?? 0);
+  const minThreshold = Number(item.minThreshold ?? item.threshold ?? 0);
+  if (quantity === 0) return { label: 'Hết hàng', class: 'bg-red-50 text-red-600' };
+  if (minThreshold && quantity <= minThreshold) return { label: 'Sắp hết', class: 'bg-amber-50 text-amber-700' };
+  return { label: 'Đủ hàng', class: 'bg-emerald-50 text-emerald-700' };
 }
 
 export default function Reports() {
@@ -157,7 +155,7 @@ export default function Reports() {
   }, [load]);
 
   return (
-    <div id="print-area">
+    <div id="print-area" className="print-area">
       <section className="mb-6 overflow-hidden rounded-[28px] bg-[#3B2314] p-6 text-white shadow-[0_18px_45px_rgba(59,35,20,0.18)] no-print">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div>
@@ -325,6 +323,7 @@ export default function Reports() {
                       <tbody>
                         {inventory.map((row, i) => {
                           const threshold = row.minThreshold ?? row.threshold;
+                          const status = getInventoryStatus(row);
                           return (
                             <tr key={row._id || row.name || i} className="border-b border-brdr hover:bg-muted">
                               <td className="px-4 py-3 font-medium">
@@ -340,7 +339,7 @@ export default function Reports() {
                                 {row.exported ?? row.exportedThisMonth ?? '—'}
                               </td>
                               <td className="px-4 py-3">
-                                <InventoryStatusBadge stock={row.stock ?? row.quantity} threshold={threshold} />
+                                <span className={`badge ${status.class}`}>{status.label}</span>
                               </td>
                             </tr>
                           );

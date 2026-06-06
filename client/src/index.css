@@ -376,13 +376,23 @@
 
   [class*='invoice-detail'],
   [class*='InvoiceDetail'],
+  #print-area,
+  #print-area *,
   .print-area,
   .print-area * {
     visibility: visible;
   }
 
+  /* reveal print content - support both id and class */
+  #print-area,
+  .print-area {
+    display: block !important;
+    width: 100%;
+  }
+
   [class*='invoice-detail'],
   [class*='InvoiceDetail'],
+  #print-area,
   .print-area {
     display: block !important;
     position: absolute;
