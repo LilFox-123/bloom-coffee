@@ -19,6 +19,7 @@ export default function Invoices() {
   const [q, setQ] = useState('');
   const [detail, setDetail] = useState(null);
   const [confirm, setConfirm] = useState(null);
+  const [printAfterOpen, setPrintAfterOpen] = useState(false);
 
   const load = async (params = {}) => {
     setLoading(true);
@@ -34,6 +35,17 @@ export default function Invoices() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    if (!printAfterOpen || !detail) return undefined;
+    const frame = requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+        setPrintAfterOpen(false);
+      }, 150);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [detail, printAfterOpen]);
 
   const applyFilter = () => load({ from, to, q });
 
@@ -161,7 +173,7 @@ export default function Invoices() {
                           title="In"
                           onClick={() => {
                             setDetail(inv);
-                            setTimeout(() => window.print(), 100);
+                            setPrintAfterOpen(true);
                           }}
                         >
                           <IconPrint width={18} height={18} />
