@@ -124,6 +124,10 @@
   animation-delay: 0.26s;
 }
 
+.print-only {
+  display: none;
+}
+
 .menu-card {
   opacity: 0;
   overflow: hidden;
@@ -352,6 +356,11 @@
 
 /* Print: chỉ hiện nội dung hóa đơn */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
   nav,
   aside,
   [class*='sidebar'],
@@ -374,13 +383,13 @@
     visibility: hidden;
   }
 
-  [class*='invoice-detail'],
-  [class*='InvoiceDetail'],
   #print-area,
   #print-area *,
+  .print-only,
+  .print-only *,
   .print-area,
   .print-area * {
-    visibility: visible;
+    visibility: visible !important;
   }
 
   /* reveal print content - support both id and class */
@@ -390,8 +399,6 @@
     width: 100%;
   }
 
-  [class*='invoice-detail'],
-  [class*='InvoiceDetail'],
   #print-area,
   .print-area {
     display: block !important;
@@ -400,6 +407,24 @@
     top: 0;
     width: 100%;
     padding: 24px;
+  }
+
+  .print-only {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-only .print-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: 720px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
 
   * {

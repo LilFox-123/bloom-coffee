@@ -9,6 +9,74 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import Logo from '../components/Logo';
 import { formatVND, formatDateTime, PAYMENT_LABELS, PAYMENT_STYLES } from '../utils/format';
 
+function InvoicePrintContent({ detail, className = '' }) {
+  if (!detail) return null;
+
+  return (
+    <div id="print-area" className={`print-area invoice-detail invoice-print-sheet ${className}`}>
+      <div className="flex items-center gap-3 border-b border-brdr pb-4 mb-4">
+        <Logo size={48} />
+        <div>
+          <p className="font-bold text-lg">Bloom Coffee</p>
+          <p className="text-xs text-text-muted">123 Đường Hoa Sữa, Quận 1, TP. Hồ Chí Minh</p>
+          <p className="text-xs text-text-muted">ĐT: 1900 1234</p>
+        </div>
+        <div className="ml-auto text-right">
+          <p className="font-bold">{detail.code}</p>
+          <p className="text-xs text-text-muted">{formatDateTime(detail.createdAt)}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+        <p>
+          <span className="text-text-muted">Bàn: </span>
+          <span className="font-medium">{detail.tableName}</span>
+        </p>
+        <p>
+          <span className="text-text-muted">Nhân viên: </span>
+          <span className="font-medium">{detail.staffName}</span>
+        </p>
+      </div>
+      <table className="w-full text-sm mb-4">
+        <thead className="bg-muted text-text-muted">
+          <tr>
+            <th className="text-left font-medium px-3 py-2">Món</th>
+            <th className="text-center font-medium px-3 py-2">SL</th>
+            <th className="text-right font-medium px-3 py-2">Đơn giá</th>
+            <th className="text-right font-medium px-3 py-2">Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          {detail.items.map((it, i) => (
+            <tr key={i} className="invoice-item-row border-b border-brdr">
+              <td className="px-3 py-2">{it.name}</td>
+              <td className="px-3 py-2 text-center">{it.quantity}</td>
+              <td className="px-3 py-2 text-right">{formatVND(it.price)}</td>
+              <td className="px-3 py-2 text-right font-medium">{formatVND(it.price * it.quantity)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="space-y-1 text-sm ml-auto max-w-xs">
+        <div className="flex justify-between text-text-muted">
+          <span>Tạm tính</span>
+          <span>{formatVND(detail.subtotal)}</span>
+        </div>
+        <div className="flex justify-between items-center pt-2 border-t border-brdr">
+          <span className="font-semibold">Tổng cộng</span>
+          <span className="text-xl font-bold text-accent-green-dark">{formatVND(detail.total)}</span>
+        </div>
+        <div className="flex justify-between pt-1">
+          <span className="text-text-muted">Thanh toán</span>
+          <span className={`badge ${PAYMENT_STYLES[detail.paymentMethod]}`}>
+            {PAYMENT_LABELS[detail.paymentMethod]}
+          </span>
+        </div>
+      </div>
+      <p className="text-center text-xs text-text-muted mt-6">Cảm ơn quý khách & hẹn gặp lại!</p>
+    </div>
+  );
+}
+
 export default function Invoices() {
   const { isAdmin } = useAuth();
   const toast = useToast();
@@ -201,7 +269,7 @@ export default function Invoices() {
       <Modal open={!!detail} onClose={() => setDetail(null)} title="Chi tiết hóa đơn" maxWidth="max-w-xl">
         {detail && (
           <>
-            <div id="print-area" className="print-area invoice-detail">
+            <div className="invoice-detail">
               <div className="flex items-center gap-3 border-b border-brdr pb-4 mb-4">
                 <Logo size={48} />
                 <div>
@@ -280,6 +348,8 @@ export default function Invoices() {
         onConfirm={() => doDelete(confirm)}
         message={`Xóa hóa đơn ${confirm?.code}? Hành động này không thể hoàn tác.`}
       />
+
+      {detail && <InvoicePrintContent detail={detail} className="print-only" />}
     </>
   );
 }
