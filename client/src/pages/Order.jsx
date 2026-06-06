@@ -260,19 +260,19 @@ function MenuItemCard({ item, orderItem, disabled, onAdd, onInc, onDec }) {
 
   return (
     <article className={`overflow-hidden rounded-[18px] border border-[#E8D5BC] bg-white shadow-[0_10px_26px_rgba(59,35,20,0.07)] ${disabled ? 'opacity-60' : ''}`}>
-      <div className="relative h-32 overflow-hidden bg-[#F4E6D4]">
+      <div className="relative h-52 overflow-hidden bg-[#F4E6D4] sm:h-56 xl:h-52 2xl:h-56">
         <img
           src={imageSrc}
           alt={item.name}
-          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+          className="h-full w-full object-cover object-center transition-transform duration-500 hover:scale-105"
           onError={() => setImageSrc(fallbackImage(item.category))}
         />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/55 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/45 to-transparent" />
         <span className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-black text-[#3B2314]">
           {item.category}
         </span>
       </div>
-      <div className="flex min-h-[148px] flex-col p-3">
+      <div className="flex min-h-[154px] flex-col p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="line-clamp-1 text-sm font-black text-[#1A0F00]">{item.name}</p>
