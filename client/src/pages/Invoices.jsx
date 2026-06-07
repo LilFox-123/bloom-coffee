@@ -61,6 +61,34 @@ function InvoicePrintContent({ detail, className = '' }) {
           <span>Tạm tính</span>
           <span>{formatVND(detail.subtotal)}</span>
         </div>
+        {detail.discountAmount > 0 && (
+          <div className="space-y-1 text-[#0F8A4B]">
+            {detail.promoDiscountAmount > 0 && (
+              <div className="flex justify-between">
+                <span>Mã khuyến mãi</span>
+                <span>- {formatVND(detail.promoDiscountAmount)}</span>
+              </div>
+            )}
+            {detail.memberDrinkDiscountAmount > 0 && (
+              <div className="flex justify-between">
+                <span>Member giảm 3k/ly</span>
+                <span>- {formatVND(detail.memberDrinkDiscountAmount)}</span>
+              </div>
+            )}
+            {detail.memberTierDiscountAmount > 0 && (
+              <div className="flex justify-between">
+                <span>Ưu đãi hạng {detail.memberTier}</span>
+                <span>- {formatVND(detail.memberTierDiscountAmount)}</span>
+              </div>
+            )}
+            {detail.pointDiscountAmount > 0 && (
+              <div className="flex justify-between">
+                <span>Đổi {detail.pointsRedeemed} điểm</span>
+                <span>- {formatVND(detail.pointDiscountAmount)}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex justify-between items-center pt-2 border-t border-brdr">
           <span className="font-semibold">Tổng cộng</span>
           <span className="text-xl font-bold text-accent-green-dark">{formatVND(detail.total)}</span>
@@ -317,6 +345,34 @@ export default function Invoices() {
                   <span>Tạm tính</span>
                   <span>{formatVND(detail.subtotal)}</span>
                 </div>
+                {detail.discountAmount > 0 && (
+                  <div className="space-y-1 text-[#0F8A4B]">
+                    {detail.promoDiscountAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span>Mã khuyến mãi</span>
+                        <span>- {formatVND(detail.promoDiscountAmount)}</span>
+                      </div>
+                    )}
+                    {detail.memberDrinkDiscountAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span>Member giảm 3k/ly</span>
+                        <span>- {formatVND(detail.memberDrinkDiscountAmount)}</span>
+                      </div>
+                    )}
+                    {detail.memberTierDiscountAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span>Ưu đãi hạng {detail.memberTier}</span>
+                        <span>- {formatVND(detail.memberTierDiscountAmount)}</span>
+                      </div>
+                    )}
+                    {detail.pointDiscountAmount > 0 && (
+                      <div className="flex justify-between">
+                        <span>Đổi {detail.pointsRedeemed} điểm</span>
+                        <span>- {formatVND(detail.pointDiscountAmount)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t border-brdr">
                   <span className="font-semibold">Tổng cộng</span>
                   <span className="text-xl font-bold text-accent-green-dark">{formatVND(detail.total)}</span>

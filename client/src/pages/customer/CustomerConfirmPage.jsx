@@ -28,10 +28,21 @@ const PROMO_CODES = {
 };
 
 const MEMBER_TIER_STYLES = {
+  Diamond: 'from-[#1F2937] to-[#7C3AED]',
   Gold: 'from-[#C89B3C] to-[#8A5A12]',
   Silver: 'from-[#9CA3AF] to-[#4B5563]',
   Member: 'from-[#3B2314] to-[#6E4A32]',
 };
+
+const MEMBER_DRINK_DISCOUNT = 3000;
+const MEMBER_DISCOUNT_CATEGORIES = ['Cà phê', 'Trà', 'Nước ép'];
+const POINT_REDEMPTIONS = [
+  { points: 0, label: 'Không đổi điểm', discount: 0 },
+  { points: 50, label: '50 điểm', discount: 5000 },
+  { points: 100, label: '100 điểm', discount: 12000 },
+  { points: 200, label: '200 điểm', discount: 30000 },
+  { points: 300, label: '300 điểm', discount: 45000 },
+];
 
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 const MOMO_LOGO = '/images/payment/MOMO-Logo-App-6262c3743a290ef02396a24ea2b66c35.png';
@@ -93,9 +104,21 @@ function getDiscountAmount(promo, total) {
 }
 
 function getMemberTier(points = 0) {
-  if (points >= 1000) return 'Gold';
-  if (points >= 500) return 'Silver';
+  if (points >= 1000) return 'Diamond';
+  if (points >= 500) return 'Gold';
+  if (points >= 200) return 'Silver';
   return 'Member';
+}
+
+function getMemberTierRate(tier) {
+  if (tier === 'Diamond') return 0.15;
+  if (tier === 'Gold') return 0.1;
+  if (tier === 'Silver') return 0.05;
+  return 0;
+}
+
+function isMemberDrink(item) {
+  return MEMBER_DISCOUNT_CATEGORIES.includes(item.category);
 }
 
 function customizationText(customizations = {}) {
@@ -196,6 +219,7 @@ export default function CustomerConfirmPage() {
   const [memberLoading, setMemberLoading] = useState(false);
   const [memberMessage, setMemberMessage] = useState('');
   const [memberError, setMemberError] = useState('');
+  const [pointsRedeemed, setPointsRedeemed] = useState(0);
   const [categories, setCategories] = useState([]);
   const [cashChoice, setCashChoice] = useState('exact');
   const [cashCustomInput, setCashCustomInput] = useState('');
@@ -216,10 +240,42 @@ export default function CustomerConfirmPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!cart.memberCustomer || pointsRedeemed > (cart.memberCustomer.points || 0)) {
+      setPointsRedeemed(0);
+    }
+  }, [cart.memberCustomer, pointsRedeemed]);
+
   const method = cart.paymentMethod;
   const cartTotal = cart.total;
   const appliedPromo = appliedPromoCode ? PROMO_CODES[appliedPromoCode] : null;
-  const discountAmount = getDiscountAmount(appliedPromo, cartTotal);
+  const promoDiscountAmount = getDiscountAmount(appliedPromo, cartTotal);
+  const memberDrinkDiscountAmount = cart.memberCustomer
+    ? Math.min(
+        cart.list.reduce(
+          (sum, row) => sum + (isMemberDrink(row.menuItem) ? row.quantity * MEMBER_DRINK_DISCOUNT : 0),
+          0
+        ),
+        Math.max(cartTotal - promoDiscountAmount, 0)
+      )
+    : 0;
+  const memberTier = cart.memberCustomer ? getMemberTier(cart.memberCustomer.points || 0) : 'Member';
+  const memberTierRate = cartTotal >= 50000 ? getMemberTierRate(memberTier) : 0;
+  const memberTierDiscountAmount = cart.memberCustomer
+    ? Math.min(
+        Math.round(Math.max(cartTotal - promoDiscountAmount - memberDrinkDiscountAmount, 0) * memberTierRate),
+        Math.max(cartTotal - promoDiscountAmount - memberDrinkDiscountAmount, 0)
+      )
+    : 0;
+  const selectedPointReward = POINT_REDEMPTIONS.find((option) => option.points === pointsRedeemed) || POINT_REDEMPTIONS[0];
+  const pointDiscountAmount = cart.memberCustomer
+    ? Math.min(
+        selectedPointReward.discount,
+        Math.max(cartTotal - promoDiscountAmount - memberDrinkDiscountAmount - memberTierDiscountAmount, 0)
+      )
+    : 0;
+  const discountAmount =
+    promoDiscountAmount + memberDrinkDiscountAmount + memberTierDiscountAmount + pointDiscountAmount;
   const payableTotal = Math.max(cartTotal - discountAmount, 0);
   const customCashAmount = Number(String(cashCustomInput).replace(/\D/g, '')) || 0;
   const cashTenderedAmount =
@@ -298,6 +354,7 @@ export default function CustomerConfirmPage() {
       });
       const member = res.data.data.customer;
       cart.setMemberCustomer(member);
+      setPointsRedeemed(0);
       setMemberPhone(member.phone);
       if (!cart.customerName && member.name) cart.setCustomerName(member.name);
       setMemberMessage(
@@ -322,6 +379,8 @@ export default function CustomerConfirmPage() {
         customerId: cart.memberCustomer?._id || undefined,
         notes: notes || undefined,
         paymentMethod: method,
+        promoCode: appliedPromoCode || undefined,
+        pointsRedeemed: cart.memberCustomer ? pointsRedeemed : 0,
         ...(method === 'tienmat'
           ? {
               cashAmountDue: payableTotal,
@@ -335,7 +394,7 @@ export default function CustomerConfirmPage() {
           customizations: r.customizations || {},
         })),
       });
-      return res.data.data.orderId;
+      return res.data.data;
     } catch (err) {
       toast.error('Không thể đặt món. Vui lòng thử lại hoặc gọi nhân viên.');
       setSubmitting(false);
@@ -352,13 +411,15 @@ export default function CustomerConfirmPage() {
     setSubmitting(true);
     setError('');
     try {
-      const newOrderId = await createOrder();
+      const orderData = await createOrder();
+      const newOrderId = orderData.orderId;
+      const paymentAmount = orderData.totalAmount ?? payableTotal;
 
       if (method === 'momo' || method === 'vnpay') {
         const successUrl = `${window.location.origin}/order/${tableId}/success/${newOrderId}`;
         const endpoint = method === 'momo' ? '/payment/momo' : '/payment/vnpay';
         const paymentPayload = {
-          amount: payableTotal,
+          amount: paymentAmount,
           orderInfo: `Bloom Coffee - ${table.tableName}`,
           orderId: newOrderId,
         };
@@ -439,17 +500,35 @@ export default function CustomerConfirmPage() {
           <span className="font-semibold text-[#3B2314]">Tổng cộng</span>
           <span className="text-lg font-bold text-[#C89B3C]">{formatVND(cartTotal)}</span>
         </div>
+        {promoDiscountAmount > 0 && (
+          <div className="mt-2 flex items-center justify-between text-sm">
+            <span className="text-[#5A4232]">Mã khuyến mãi</span>
+            <span className="font-semibold text-[#10B981]">- {formatVND(promoDiscountAmount)}</span>
+          </div>
+        )}
+        {memberDrinkDiscountAmount > 0 && (
+          <div className="mt-2 flex items-center justify-between text-sm">
+            <span className="text-[#5A4232]">Member giảm 3k/ly</span>
+            <span className="font-semibold text-[#10B981]">- {formatVND(memberDrinkDiscountAmount)}</span>
+          </div>
+        )}
+        {memberTierDiscountAmount > 0 && (
+          <div className="mt-2 flex items-center justify-between text-sm">
+            <span className="text-[#5A4232]">Ưu đãi hạng {memberTier}</span>
+            <span className="font-semibold text-[#10B981]">- {formatVND(memberTierDiscountAmount)}</span>
+          </div>
+        )}
+        {pointDiscountAmount > 0 && (
+          <div className="mt-2 flex items-center justify-between text-sm">
+            <span className="text-[#5A4232]">Đổi {pointsRedeemed} điểm</span>
+            <span className="font-semibold text-[#10B981]">- {formatVND(pointDiscountAmount)}</span>
+          </div>
+        )}
         {discountAmount > 0 && (
-          <>
-            <div className="mt-2 flex items-center justify-between text-sm">
-              <span className="text-[#5A4232]">Khuyến mãi</span>
-              <span className="font-semibold text-[#10B981]">- {formatVND(discountAmount)}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between rounded-xl bg-[#FFF8EF] px-3 py-2">
-              <span className="font-semibold text-[#3B2314]">Cần thanh toán</span>
-              <span className="text-lg font-extrabold text-[#C89B3C]">{formatVND(payableTotal)}</span>
-            </div>
-          </>
+          <div className="mt-2 flex items-center justify-between rounded-xl bg-[#FFF8EF] px-3 py-2">
+            <span className="font-semibold text-[#3B2314]">Cần thanh toán</span>
+            <span className="text-lg font-extrabold text-[#C89B3C]">{formatVND(payableTotal)}</span>
+          </div>
         )}
       </div>
 
@@ -520,6 +599,40 @@ export default function CustomerConfirmPage() {
         {cart.memberCustomer ? (
           <div className="space-y-3">
             <MemberCard member={cart.memberCustomer} estimatedPoints={estimatedMemberPoints} />
+            <div className="rounded-2xl border border-[#E3D3C4] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-[#3B2314]">Ưu đãi member đang áp dụng</p>
+                  <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
+                    Giảm 3.000đ mỗi ly nước, giảm theo hạng {memberTier} và có thể đổi điểm.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#E8F5E9] px-3 py-1 text-xs font-bold text-[#0F8A4B]">
+                  -{formatVND(memberDrinkDiscountAmount + memberTierDiscountAmount + pointDiscountAmount)}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {POINT_REDEMPTIONS.map((option) => {
+                  const disabled = option.points > (cart.memberCustomer?.points || 0);
+                  return (
+                    <button
+                      key={option.points}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setPointsRedeemed(option.points)}
+                      className={`min-h-[44px] rounded-xl border px-2 text-xs font-black ${
+                        pointsRedeemed === option.points
+                          ? 'border-[#C89B3C] bg-[#C89B3C] text-white'
+                          : 'border-[#E3D3C4] bg-[#FAF6F1] text-[#3B2314]'
+                      } disabled:cursor-not-allowed disabled:opacity-40`}
+                    >
+                      <span className="block">{option.label}</span>
+                      {option.discount > 0 && <span className="block text-[11px]">-{formatVND(option.discount)}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -527,6 +640,7 @@ export default function CustomerConfirmPage() {
                 setMemberPhone('');
                 setMemberMessage('');
                 setMemberError('');
+                setPointsRedeemed(0);
               }}
               className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-white text-sm font-bold text-[#5A4232]"
             >
@@ -535,7 +649,7 @@ export default function CustomerConfirmPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-[#E3D3C4] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-            <p className="text-sm font-bold text-[#3B2314]">Nhập SĐT để tích điểm cho đơn này</p>
+            <p className="text-sm font-bold text-[#3B2314]">Nhập SĐT để giảm 3.000đ/ly và tích điểm</p>
             <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
               10.000đ = 1 điểm. Nếu chưa có thẻ, hệ thống sẽ tạo thẻ mới cho bạn.
             </p>

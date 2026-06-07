@@ -439,7 +439,9 @@ function OrderScreen({ tableId }) {
   }
 
   const subtotal = (order?.items || []).reduce((s, i) => s + i.price * i.quantity, 0);
-  const total = subtotal;
+  const orderSubtotal = order?.subtotalAmount || subtotal;
+  const orderDiscount = order?.discountAmount || 0;
+  const total = order?.totalAmount ?? Math.max(orderSubtotal - orderDiscount, 0);
   const itemCount = (order?.items || []).reduce((s, i) => s + i.quantity, 0);
 
   const cartPanel = (
@@ -574,8 +576,36 @@ function OrderScreen({ tableId }) {
       <div className="mt-4 rounded-2xl bg-[#FAF6F1] p-4 text-sm">
         <div className="flex justify-between text-[#8A6F5D]">
           <span>Tạm tính</span>
-          <span>{formatVND(subtotal)}</span>
+          <span>{formatVND(orderSubtotal)}</span>
         </div>
+        {orderDiscount > 0 && (
+          <div className="mt-2 space-y-1">
+            {order?.promoDiscountAmount > 0 && (
+              <div className="flex justify-between text-[#0F8A4B]">
+                <span>Mã khuyến mãi</span>
+                <span>- {formatVND(order.promoDiscountAmount)}</span>
+              </div>
+            )}
+            {order?.memberDrinkDiscountAmount > 0 && (
+              <div className="flex justify-between text-[#0F8A4B]">
+                <span>Member giảm 3k/ly</span>
+                <span>- {formatVND(order.memberDrinkDiscountAmount)}</span>
+              </div>
+            )}
+            {order?.memberTierDiscountAmount > 0 && (
+              <div className="flex justify-between text-[#0F8A4B]">
+                <span>Ưu đãi hạng {order.memberTier}</span>
+                <span>- {formatVND(order.memberTierDiscountAmount)}</span>
+              </div>
+            )}
+            {order?.pointDiscountAmount > 0 && (
+              <div className="flex justify-between text-[#0F8A4B]">
+                <span>Đổi {order.pointsRedeemed} điểm</span>
+                <span>- {formatVND(order.pointDiscountAmount)}</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="mt-3 flex items-center justify-between border-t border-[#E8D5BC] pt-3">
           <span className="font-black text-[#1A0F00]">Tổng cộng</span>
           <span className="text-2xl font-black text-[#C89B3C]">{formatVND(total)}</span>
@@ -620,7 +650,7 @@ function OrderScreen({ tableId }) {
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
               <p className="text-xs font-bold text-white/70">Tạm tính</p>
-              <p className="mt-2 text-2xl font-black">{formatVND(subtotal)}</p>
+              <p className="mt-2 text-2xl font-black">{formatVND(orderSubtotal)}</p>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
               <p className="text-xs font-bold text-white/70">Tổng</p>

@@ -1,0 +1,180 @@
+// Bloom Coffee - DBML export for dbdiagram.io
+// Source: server/src/models/*.js
+
+Table users {
+  _id ObjectId [pk]
+  name string [not null]
+  email string [not null, unique]
+  password string [not null]
+  role string
+  phone string
+  isActive boolean
+  lastLogin DateArray
+  createdAt Date
+  updatedAt Date
+}
+
+Table tables {
+  _id ObjectId [pk]
+  name string [not null]
+  capacity number [not null]
+  zone string
+  status string
+  guests number
+  occupiedAt Date
+  currentOrderId ObjectId
+  createdAt Date
+  updatedAt Date
+}
+
+Table menu_items {
+  _id ObjectId [pk]
+  name string [not null]
+  category string [not null]
+  price number [not null]
+  description string
+  imageUrl string
+  isAvailable boolean
+  createdAt Date
+  updatedAt Date
+}
+
+Table customers {
+  _id ObjectId [pk]
+  name string [not null]
+  phone string [not null]
+  email string
+  points number
+  totalSpent number
+  joinedAt Date
+  createdAt Date
+  updatedAt Date
+}
+
+Table orders {
+  _id ObjectId [pk]
+  tableId ObjectId
+  staffId ObjectId [not null]
+  source string
+  status string
+  paymentStatus string
+  paymentMethod string
+  cashAmountDue number
+  cashTenderedAmount number
+  cashChangeAmount number
+  subtotalAmount number
+  discountAmount number
+  promoDiscountAmount number
+  memberDrinkDiscountAmount number
+  memberTierDiscountAmount number
+  pointDiscountAmount number
+  pointsRedeemed number
+  memberTier string
+  totalAmount number
+  customerId ObjectId
+  customerName string
+  note string
+  tableChangeRequest_status string
+  tableChangeRequest_note string
+  tableChangeRequest_requestedAt Date
+  tableChangeRequest_handledAt Date
+  tableChangeRequest_handledBy ObjectId
+  createdAt Date
+  updatedAt Date
+}
+
+Table order_items {
+  _id ObjectId [pk]
+  orderId ObjectId [not null]
+  menuItemId ObjectId [not null]
+  name string [not null]
+  price number [not null]
+  quantity number [not null]
+  customizations_ice string
+  customizations_sugar string
+  customizations_sweetness string
+  customizations_note string
+  status string
+}
+
+Table invoices {
+  _id ObjectId [pk]
+  code string [not null, unique]
+  orderId ObjectId
+  tableId ObjectId
+  tableName string
+  staffId ObjectId
+  staffName string
+  customerId ObjectId
+  subtotal number [not null]
+  vat number [not null]
+  discountAmount number
+  promoDiscountAmount number
+  memberDrinkDiscountAmount number
+  memberTierDiscountAmount number
+  pointDiscountAmount number
+  pointsRedeemed number
+  memberTier string
+  total number [not null]
+  paymentMethod string
+  source string
+  createdAt Date
+  updatedAt Date
+}
+
+Table invoice_items {
+  invoiceId ObjectId [not null]
+  menuItemId ObjectId
+  name string [not null]
+  price number [not null]
+  quantity number [not null]
+  customizations_ice string
+  customizations_sugar string
+  customizations_sweetness string
+  customizations_note string
+}
+
+Table inventory_items {
+  _id ObjectId [pk]
+  name string [not null]
+  unit string [not null]
+  quantity number [not null]
+  minThreshold number [not null]
+  createdAt Date
+  updatedAt Date
+}
+
+Table inventory_transactions {
+  _id ObjectId [pk]
+  type string [not null]
+  itemId ObjectId [not null]
+  itemName string
+  quantity number [not null]
+  staffId ObjectId
+  staffName string
+  note string
+  date Date
+  createdAt Date
+  updatedAt Date
+}
+
+Ref: orders.staffId > users._id
+Ref: orders.tableId > tables._id
+Ref: orders.customerId > customers._id
+Ref: orders.tableChangeRequest_handledBy > users._id
+
+Ref: tables.currentOrderId > orders._id
+
+Ref: order_items.orderId > orders._id
+Ref: order_items.menuItemId > menu_items._id
+
+Ref: invoices.orderId > orders._id
+Ref: invoices.tableId > tables._id
+Ref: invoices.staffId > users._id
+Ref: invoices.customerId > customers._id
+
+Ref: invoice_items.invoiceId > invoices._id
+Ref: invoice_items.menuItemId > menu_items._id
+
+Ref: inventory_transactions.itemId > inventory_items._id
+Ref: inventory_transactions.staffId > users._id

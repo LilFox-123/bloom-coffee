@@ -29,6 +29,13 @@ const invoiceSchema = new mongoose.Schema(
     subtotal: { type: Number, required: true }, // VNĐ
     vat: { type: Number, required: true }, // VNĐ, currently 0 because Bloom Coffee does not charge VAT
     total: { type: Number, required: true }, // VNĐ
+    discountAmount: { type: Number, default: 0 },
+    promoDiscountAmount: { type: Number, default: 0 },
+    memberDrinkDiscountAmount: { type: Number, default: 0 },
+    memberTierDiscountAmount: { type: Number, default: 0 },
+    pointDiscountAmount: { type: Number, default: 0 },
+    pointsRedeemed: { type: Number, default: 0 },
+    memberTier: { type: String, default: '' },
     paymentMethod: {
       type: String,
       enum: ['tienmat', 'chuyenkhoan', 'vidientu'],

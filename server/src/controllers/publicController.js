@@ -25,14 +25,51 @@ const PAYMENT_STATUS_LABELS = {
   failed: 'Thanh toán thất bại',
 };
 
+const MEMBER_DRINK_DISCOUNT = 3000;
+const MEMBER_DISCOUNT_CATEGORIES = ['Cà phê', 'Trà', 'Nước ép'];
+const PROMO_CODES = {
+  BLOOM10: { type: 'percent', value: 0.1, max: 30000 },
+  COMBO15: { type: 'fixed', value: 15000 },
+  CROISSANT: { type: 'percent', value: 0.05, max: 20000 },
+};
+const POINT_REDEMPTIONS = {
+  50: 5000,
+  100: 12000,
+  200: 30000,
+  300: 45000,
+};
+
 function normalizePhone(phone) {
   return String(phone || '').replace(/\s+/g, '').trim();
 }
 
 function memberTier(points = 0) {
-  if (points >= 1000) return 'Gold';
-  if (points >= 500) return 'Silver';
+  if (points >= 1000) return 'Diamond';
+  if (points >= 500) return 'Gold';
+  if (points >= 200) return 'Silver';
   return 'Member';
+}
+
+function memberTierRate(tier) {
+  if (tier === 'Diamond') return 0.15;
+  if (tier === 'Gold') return 0.1;
+  if (tier === 'Silver') return 0.05;
+  return 0;
+}
+
+function clampDiscount(value, max) {
+  return Math.min(Math.max(Math.round(Number(value) || 0), 0), Math.max(Math.round(Number(max) || 0), 0));
+}
+
+function promoDiscount(code, total) {
+  const promo = PROMO_CODES[String(code || '').trim().toUpperCase()];
+  if (!promo) return 0;
+  if (promo.type === 'fixed') return clampDiscount(promo.value, total);
+  return clampDiscount(total * promo.value, Math.min(promo.max || total, total));
+}
+
+function isMemberDrink(menuItem) {
+  return MEMBER_DISCOUNT_CATEGORIES.includes(menuItem?.category);
 }
 
 function memberPayload(customer) {
@@ -59,6 +96,15 @@ function publicOrderPayload(order, table) {
     cashAmountDue: order.cashAmountDue || 0,
     cashTenderedAmount: order.cashTenderedAmount || 0,
     cashChangeAmount: order.cashChangeAmount || 0,
+    subtotalAmount: order.subtotalAmount || 0,
+    discountAmount: order.discountAmount || 0,
+    promoDiscountAmount: order.promoDiscountAmount || 0,
+    memberDrinkDiscountAmount: order.memberDrinkDiscountAmount || 0,
+    memberTierDiscountAmount: order.memberTierDiscountAmount || 0,
+    pointDiscountAmount: order.pointDiscountAmount || 0,
+    pointsRedeemed: order.pointsRedeemed || 0,
+    memberTier: order.memberTier || '',
+    totalAmount: order.totalAmount || 0,
     tableChangeRequest: {
       status: order.tableChangeRequest?.status || 'none',
       note: order.tableChangeRequest?.note || '',
@@ -89,6 +135,64 @@ function customizationSignature(customizations = {}) {
   return ['ice', 'sugar', 'sweetness', 'note']
     .map((key) => `${key}:${customizations[key] || ''}`)
     .join('|');
+}
+
+async function calculateOrderPricing(orderItems, customerId, promoCode, pointsRedeemed) {
+  const subtotalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  let customer = null;
+  if (mongoose.isValidObjectId(customerId)) {
+    customer = await Customer.findById(customerId);
+  }
+
+  const menuIds = orderItems.map((item) => item.menuItemId).filter(Boolean);
+  const menuDocs = await MenuItem.find({ _id: { $in: menuIds } }).select('category');
+  const menuMap = new Map(menuDocs.map((item) => [String(item._id), item]));
+
+  const promoDiscountAmount = promoDiscount(promoCode, subtotalAmount);
+  let remaining = subtotalAmount - promoDiscountAmount;
+
+  const memberDrinkDiscountAmount = customer
+    ? clampDiscount(
+        orderItems.reduce((sum, item) => {
+          const menuItem = menuMap.get(String(item.menuItemId));
+          return sum + (isMemberDrink(menuItem) ? item.quantity * MEMBER_DRINK_DISCOUNT : 0);
+        }, 0),
+        remaining
+      )
+    : 0;
+  remaining -= memberDrinkDiscountAmount;
+
+  const tier = customer ? memberTier(customer.points || 0) : '';
+  const tierRate = subtotalAmount >= 50000 ? memberTierRate(tier) : 0;
+  const memberTierDiscountAmount = customer ? clampDiscount(remaining * tierRate, remaining) : 0;
+  remaining -= memberTierDiscountAmount;
+
+  const normalizedPointsRedeemed = Number(pointsRedeemed) || 0;
+  if (normalizedPointsRedeemed && !POINT_REDEMPTIONS[normalizedPointsRedeemed]) {
+    throw Object.assign(new Error('Mốc đổi điểm không hợp lệ'), { statusCode: 400 });
+  }
+  if (customer && normalizedPointsRedeemed > (customer.points || 0)) {
+    throw Object.assign(new Error('Điểm thành viên không đủ để đổi ưu đãi'), { statusCode: 400 });
+  }
+
+  const pointsToRedeem = customer ? normalizedPointsRedeemed : 0;
+  const pointDiscountAmount = clampDiscount(POINT_REDEMPTIONS[pointsToRedeem] || 0, remaining);
+  remaining -= pointDiscountAmount;
+
+  const discountAmount =
+    promoDiscountAmount + memberDrinkDiscountAmount + memberTierDiscountAmount + pointDiscountAmount;
+
+  return {
+    subtotalAmount,
+    discountAmount,
+    promoDiscountAmount,
+    memberDrinkDiscountAmount,
+    memberTierDiscountAmount,
+    pointDiscountAmount,
+    pointsRedeemed: pointsToRedeem,
+    memberTier: tier,
+    totalAmount: Math.max(remaining, 0),
+  };
 }
 
 // GET /api/public/table/:tableId
@@ -208,6 +312,8 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
     cashAmountDue = 0,
     cashTenderedAmount = 0,
     cashChangeAmount = 0,
+    promoCode = '',
+    pointsRedeemed = 0,
   } = req.body;
 
   if (!mongoose.isValidObjectId(tableId)) {
@@ -273,15 +379,6 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
   if (customerName) order.customerName = String(customerName).trim();
   if (notes || note) order.note = String(notes || note).trim();
   order.paymentMethod = paymentMethod;
-  if (paymentMethod === 'tienmat') {
-    order.cashAmountDue = Number(cashAmountDue) || 0;
-    order.cashTenderedAmount = Number(cashTenderedAmount) || 0;
-    order.cashChangeAmount = Number(cashChangeAmount) || 0;
-  } else {
-    order.cashAmountDue = 0;
-    order.cashTenderedAmount = 0;
-    order.cashChangeAmount = 0;
-  }
 
   // merge incoming items into the order
   for (const incoming of orderItems) {
@@ -297,6 +394,28 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
       order.items.push(incoming);
     }
   }
+
+  let pricing;
+  try {
+    pricing = await calculateOrderPricing(order.items, order.customerId, promoCode, pointsRedeemed);
+  } catch (err) {
+    return res.status(err.statusCode || 400).json({ success: false, message: err.message });
+  }
+
+  Object.assign(order, pricing);
+  if (paymentMethod === 'tienmat') {
+    const tendered = Number(cashTenderedAmount) || Number(cashAmountDue) || 0;
+    if (tendered < pricing.totalAmount) {
+      return res.status(400).json({ success: false, message: 'Số tiền khách chuẩn bị chưa đủ để thanh toán' });
+    }
+    order.cashAmountDue = pricing.totalAmount;
+    order.cashTenderedAmount = tendered;
+    order.cashChangeAmount = Math.max(tendered - pricing.totalAmount, 0);
+  } else {
+    order.cashAmountDue = 0;
+    order.cashTenderedAmount = 0;
+    order.cashChangeAmount = 0;
+  }
   await order.save();
 
   // mark table as occupied
@@ -311,6 +430,7 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
     data: {
       orderId: order._id,
       tableName: table.name,
+      totalAmount: order.totalAmount,
       estimatedWait: 15,
     },
   });

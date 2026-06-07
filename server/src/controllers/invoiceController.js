@@ -28,7 +28,7 @@ function withoutVat(invoice) {
   return {
     ...data,
     vat: 0,
-    total: data.subtotal ?? data.total,
+    total: data.total ?? data.subtotal,
   };
 }
 
@@ -50,9 +50,11 @@ export const createInvoice = asyncHandler(async (req, res) => {
     quantity: i.quantity,
     customizations: i.customizations || {},
   }));
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const computedSubtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotal = order.subtotalAmount || computedSubtotal;
   const vat = 0;
-  const total = subtotal;
+  const discountAmount = order.discountAmount || 0;
+  const total = order.totalAmount || Math.max(subtotal - discountAmount, 0);
   const resolvedCustomerId = customerId || order.customerId || null;
 
   const invoice = await Invoice.create({
@@ -66,6 +68,13 @@ export const createInvoice = asyncHandler(async (req, res) => {
     items,
     subtotal,
     vat,
+    discountAmount,
+    promoDiscountAmount: order.promoDiscountAmount || 0,
+    memberDrinkDiscountAmount: order.memberDrinkDiscountAmount || 0,
+    memberTierDiscountAmount: order.memberTierDiscountAmount || 0,
+    pointDiscountAmount: order.pointDiscountAmount || 0,
+    pointsRedeemed: order.pointsRedeemed || 0,
+    memberTier: order.memberTier || '',
     total,
     paymentMethod,
     source: order.source || 'staff',
@@ -86,8 +95,10 @@ export const createInvoice = asyncHandler(async (req, res) => {
   // cộng điểm khách hàng (1 điểm / 10.000đ)
   if (resolvedCustomerId) {
     const earned = Math.floor(total / 10000);
+    const customer = await Customer.findById(resolvedCustomerId);
+    const redeemed = Math.min(order.pointsRedeemed || 0, customer?.points || 0);
     await Customer.findByIdAndUpdate(resolvedCustomerId, {
-      $inc: { points: earned, totalSpent: total },
+      $inc: { points: earned - redeemed, totalSpent: total },
     });
   }
 

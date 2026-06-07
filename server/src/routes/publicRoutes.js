@@ -37,6 +37,8 @@ router.post(
     body('cashAmountDue').optional().isInt({ min: 0 }),
     body('cashTenderedAmount').optional().isInt({ min: 0 }),
     body('cashChangeAmount').optional().isInt({ min: 0 }),
+    body('promoCode').optional().isString().trim().isLength({ max: 30 }),
+    body('pointsRedeemed').optional().isInt({ min: 0 }),
   ],
   validate,
   createPublicOrder

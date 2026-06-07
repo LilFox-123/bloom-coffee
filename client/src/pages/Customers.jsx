@@ -56,7 +56,7 @@ export default function Customers() {
     () => ({
       total: customers.length,
       points: customers.reduce((s, c) => s + c.points, 0),
-      eligible: customers.filter((c) => c.points > 500).length,
+      eligible: customers.filter((c) => c.points >= 200).length,
     }),
     [customers]
   );
@@ -139,7 +139,7 @@ export default function Customers() {
       <div className="mb-5 grid gap-4 sm:grid-cols-3">
         <StatCard label="Tổng khách hàng" value={stats.total} helper="Hồ sơ" tone="blue" />
         <StatCard label="Tổng điểm đã phát" value={stats.points.toLocaleString('vi-VN')} helper="Điểm" tone="green" />
-        <StatCard label="Đủ điều kiện KM" value={stats.eligible} helper=">500 điểm" tone="gold" />
+        <StatCard label="Từ hạng Silver" value={stats.eligible} helper=">=200 điểm" tone="gold" />
       </div>
 
       <section className="mb-6 rounded-[24px] border border-[#E8D5BC] bg-white/85 p-4 shadow-[0_12px_32px_rgba(59,35,20,0.06)]">
@@ -192,7 +192,7 @@ export default function Customers() {
                       <td className="px-4 py-3">{customer.phone}</td>
                       <td className="px-4 py-3 text-text-muted">{customer.email || '—'}</td>
                       <td className="px-4 py-3 text-center">
-                        <Badge color={customer.points > 500 ? 'green' : 'blue'}>{customer.points} điểm</Badge>
+                        <Badge color={customer.points >= 200 ? 'green' : 'blue'}>{customer.points} điểm</Badge>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">{formatVND(customer.totalSpent)}</td>
                       <td className="px-4 py-3 text-text-muted">{formatDate(customer.joinedAt)}</td>
