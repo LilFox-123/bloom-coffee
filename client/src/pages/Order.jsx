@@ -406,6 +406,16 @@ function OrderScreen({ tableId }) {
     }
   };
 
+  const acceptTableChangeRequest = async () => {
+    try {
+      const res = await api.patch(`/orders/${order._id}/table-change-request`, { status: 'accepted' });
+      setOrder(res.data.data);
+      toast.success('Đã tiếp nhận yêu cầu đổi chỗ');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   const createInvoice = async () => {
     setSubmitting(true);
     try {
@@ -452,6 +462,34 @@ function OrderScreen({ tableId }) {
 
       <FlowSteps status={order?.status} />
 
+      {order?.tableChangeRequest?.status === 'pending' && (
+        <div className="mt-4 rounded-2xl border border-[#F0D3A1] bg-[#FFF8EF] p-4">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#A56D13]">Khách yêu cầu đổi chỗ</p>
+          <p className="mt-2 text-sm font-semibold text-[#3B2314]">
+            {order.tableChangeRequest.note || 'Khách muốn đổi sang chỗ ngồi khác.'}
+          </p>
+          <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
+            Hãy kiểm tra bàn trống, trao đổi với khách và dùng chức năng Chuyển bàn nếu có chỗ phù hợp.
+          </p>
+          <button
+            type="button"
+            onClick={acceptTableChangeRequest}
+            className="mt-3 min-h-[40px] w-full rounded-xl bg-[#3B2314] px-3 text-sm font-black text-white"
+          >
+            Tiếp nhận yêu cầu
+          </button>
+        </div>
+      )}
+
+      {order?.tableChangeRequest?.status === 'accepted' && (
+        <div className="mt-4 rounded-2xl border border-[#D7E9D5] bg-[#F0FAF2] p-4">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#2E7D32]">Đã tiếp nhận đổi chỗ</p>
+          <p className="mt-1 text-xs font-semibold text-[#4A7C59]">
+            Nhân viên đã ghi nhận yêu cầu. Nếu đã sắp xếp được bàn mới, hãy dùng chức năng Chuyển bàn.
+          </p>
+        </div>
+      )}
+
       <div className="mt-4 rounded-2xl border border-[#E8D5BC] bg-white p-3">
         <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[#8A6F5D]">Cập nhật trạng thái cho khách</p>
         <div className="grid grid-cols-2 gap-2">
@@ -468,6 +506,29 @@ function OrderScreen({ tableId }) {
           ))}
         </div>
       </div>
+
+      {order?.paymentMethod === 'tienmat' && order?.cashTenderedAmount > 0 && (
+        <div className="mt-4 rounded-2xl border border-[#F0D3A1] bg-[#FFF8EF] p-4">
+          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#A56D13]">Khách chuẩn bị tiền mặt</p>
+          <div className="mt-3 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="font-semibold text-[#8A6F5D]">Cần thu</span>
+              <span className="font-black text-[#3B2314]">{formatVND(order.cashAmountDue || total)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-[#8A6F5D]">Khách đưa</span>
+              <span className="font-black text-[#C8922A]">{formatVND(order.cashTenderedAmount)}</span>
+            </div>
+            <div className="flex justify-between rounded-xl bg-white px-3 py-2">
+              <span className="font-semibold text-[#8A6F5D]">Cần thối</span>
+              <span className="font-black text-[#0F8A4B]">{formatVND(order.cashChangeAmount || 0)}</span>
+            </div>
+          </div>
+          <p className="mt-3 text-xs font-semibold text-[#8A6F5D]">
+            Khi giao món, thu đúng số khách đã chuẩn bị và thối lại theo dòng trên.
+          </p>
+        </div>
+      )}
 
       <div className="-mx-2 mt-4 max-h-[42vh] flex-1 overflow-y-auto px-2">
         {!order?.items.length ? (

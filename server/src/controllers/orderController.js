@@ -141,3 +141,20 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   await order.save();
   res.json({ success: true, data: order });
 });
+
+export const handleTableChangeRequest = asyncHandler(async (req, res) => {
+  const { status = 'accepted' } = req.body;
+  const order = await Order.findById(req.params.id);
+  if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn' });
+
+  if (status !== 'accepted') {
+    return res.status(400).json({ success: false, message: 'Trạng thái yêu cầu không hợp lệ' });
+  }
+
+  order.tableChangeRequest.status = 'accepted';
+  order.tableChangeRequest.handledAt = new Date();
+  order.tableChangeRequest.handledBy = req.user._id;
+
+  await order.save();
+  res.json({ success: true, data: order });
+});

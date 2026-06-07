@@ -4,7 +4,26 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 export const listTables = asyncHandler(async (req, res) => {
   const tables = await Table.find().sort({ createdAt: 1 });
-  res.json({ success: true, data: tables });
+  const activeOrders = await Order.find({
+    tableId: { $in: tables.map((table) => table._id) },
+    status: { $ne: 'hoantat' },
+    'tableChangeRequest.status': 'pending',
+  }).select('tableId tableChangeRequest');
+  const requestByTableId = new Map(activeOrders.map((order) => [String(order.tableId), order]));
+  const data = tables.map((table) => {
+    const order = requestByTableId.get(String(table._id));
+    const payload = table.toObject();
+    if (order) {
+      payload.tableChangeRequest = {
+        orderId: order._id,
+        status: order.tableChangeRequest.status,
+        note: order.tableChangeRequest.note,
+        requestedAt: order.tableChangeRequest.requestedAt,
+      };
+    }
+    return payload;
+  });
+  res.json({ success: true, data });
 });
 
 export const createTable = asyncHandler(async (req, res) => {
@@ -88,6 +107,11 @@ export const transferTableOrder = asyncHandler(async (req, res) => {
   }
 
   order.tableId = targetTable._id;
+  if (order.tableChangeRequest?.status === 'pending') {
+    order.tableChangeRequest.status = 'accepted';
+    order.tableChangeRequest.handledAt = new Date();
+    order.tableChangeRequest.handledBy = req.user._id;
+  }
   targetTable.status = 'dangdung';
   targetTable.currentOrderId = order._id;
   targetTable.guests = sourceTable.guests || targetTable.guests || 1;

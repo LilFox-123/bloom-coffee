@@ -8,6 +8,7 @@ import {
   removeItem,
   saveOrder,
   updateOrderStatus,
+  handleTableChangeRequest,
 } from '../controllers/orderController.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -34,6 +35,12 @@ router.patch(
 );
 router.delete('/:id/items/:itemId', removeItem);
 router.patch('/:id/status', updateOrderStatus);
+router.patch(
+  '/:id/table-change-request',
+  [body('status').optional().isIn(['accepted'])],
+  validate,
+  handleTableChangeRequest
+);
 router.patch('/:id/save', saveOrder);
 
 export default router;

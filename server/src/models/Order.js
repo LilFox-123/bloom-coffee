@@ -33,9 +33,28 @@ const orderSchema = new mongoose.Schema(
       default: 'moi',
     },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+    paymentMethod: {
+      type: String,
+      enum: ['tienmat', 'chuyenkhoan', 'momo', 'vnpay'],
+      default: 'tienmat',
+    },
+    cashAmountDue: { type: Number, default: 0 },
+    cashTenderedAmount: { type: Number, default: 0 },
+    cashChangeAmount: { type: Number, default: 0 },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', default: null },
     customerName: { type: String, default: '' },
     note: { type: String, default: '' },
+    tableChangeRequest: {
+      status: {
+        type: String,
+        enum: ['none', 'pending', 'accepted'],
+        default: 'none',
+      },
+      note: { type: String, default: '' },
+      requestedAt: { type: Date, default: null },
+      handledAt: { type: Date, default: null },
+      handledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    },
     items: { type: [orderItemSchema], default: [] },
   },
   { timestamps: true }

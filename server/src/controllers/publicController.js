@@ -55,6 +55,16 @@ function publicOrderPayload(order, table) {
     statusLabel: ORDER_STATUS_LABELS[order.status] || 'Đang xử lý',
     paymentStatus: order.paymentStatus,
     paymentStatusLabel: PAYMENT_STATUS_LABELS[order.paymentStatus] || 'Chờ thanh toán',
+    paymentMethod: order.paymentMethod || 'tienmat',
+    cashAmountDue: order.cashAmountDue || 0,
+    cashTenderedAmount: order.cashTenderedAmount || 0,
+    cashChangeAmount: order.cashChangeAmount || 0,
+    tableChangeRequest: {
+      status: order.tableChangeRequest?.status || 'none',
+      note: order.tableChangeRequest?.note || '',
+      requestedAt: order.tableChangeRequest?.requestedAt || null,
+      handledAt: order.tableChangeRequest?.handledAt || null,
+    },
     items: order.items.map((i) => ({
       name: i.name,
       quantity: i.quantity,
@@ -187,7 +197,18 @@ export const upsertPublicMember = asyncHandler(async (req, res) => {
 
 // POST /api/public/order
 export const createPublicOrder = asyncHandler(async (req, res) => {
-  const { tableId, items, customerId, customerName, notes, note } = req.body;
+  const {
+    tableId,
+    items,
+    customerId,
+    customerName,
+    notes,
+    note,
+    paymentMethod = 'tienmat',
+    cashAmountDue = 0,
+    cashTenderedAmount = 0,
+    cashChangeAmount = 0,
+  } = req.body;
 
   if (!mongoose.isValidObjectId(tableId)) {
     return res.status(404).json({ success: false, message: 'Bàn không tồn tại' });
@@ -251,6 +272,16 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
   if (mongoose.isValidObjectId(customerId)) order.customerId = customerId;
   if (customerName) order.customerName = String(customerName).trim();
   if (notes || note) order.note = String(notes || note).trim();
+  order.paymentMethod = paymentMethod;
+  if (paymentMethod === 'tienmat') {
+    order.cashAmountDue = Number(cashAmountDue) || 0;
+    order.cashTenderedAmount = Number(cashTenderedAmount) || 0;
+    order.cashChangeAmount = Number(cashChangeAmount) || 0;
+  } else {
+    order.cashAmountDue = 0;
+    order.cashTenderedAmount = 0;
+    order.cashChangeAmount = 0;
+  }
 
   // merge incoming items into the order
   for (const incoming of orderItems) {
@@ -364,6 +395,33 @@ export const getPublicOrderStatus = asyncHandler(async (req, res) => {
   if (!order) {
     return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
   }
+  const table = await Table.findById(order.tableId);
+  res.json({ success: true, data: publicOrderPayload(order, table) });
+});
+
+// POST /api/public/order/:orderId/table-change-request
+export const requestTableChange = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { note } = req.body;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+  }
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+  }
+
+  order.tableChangeRequest = {
+    status: 'pending',
+    note: note ? String(note).trim().slice(0, 200) : 'Khách muốn đổi chỗ ngồi',
+    requestedAt: order.tableChangeRequest?.requestedAt || new Date(),
+    handledAt: null,
+    handledBy: null,
+  };
+
+  await order.save();
   const table = await Table.findById(order.tableId);
   res.json({ success: true, data: publicOrderPayload(order, table) });
 });

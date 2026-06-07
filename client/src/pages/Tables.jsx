@@ -192,6 +192,18 @@ export default function Tables() {
     }
   };
 
+  const acceptTableChangeRequest = async (table) => {
+    const orderId = table?.tableChangeRequest?.orderId;
+    if (!orderId) return;
+    try {
+      await api.patch(`/orders/${orderId}/table-change-request`, { status: 'accepted' });
+      toast.success(`Đã tiếp nhận yêu cầu đổi chỗ của ${table.name}`);
+      load();
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     const errs = {};
@@ -318,6 +330,21 @@ export default function Tables() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {filtered.map((t) => (
             <TableCard key={t._id} table={t}>
+              {t.tableChangeRequest?.status === 'pending' && (
+                <div className="rounded-2xl border border-[#F0D3A1] bg-[#FFF8EF] p-3">
+                  <p className="text-xs font-black uppercase tracking-[0.1em] text-[#A56D13]">Yêu cầu đổi chỗ</p>
+                  <p className="mt-1 text-xs font-semibold text-[#6B4B37]">
+                    {t.tableChangeRequest.note || 'Khách muốn đổi sang chỗ ngồi khác.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => acceptTableChangeRequest(t)}
+                    className="mt-2 min-h-[38px] w-full rounded-xl bg-[#3B2314] px-3 text-xs font-black text-white"
+                  >
+                    Tiếp nhận yêu cầu
+                  </button>
+                </div>
+              )}
               {t.status === 'trong' ? (
                 <button className="btn-primary w-full" onClick={() => openSeat(t)}>
                   Nhận khách

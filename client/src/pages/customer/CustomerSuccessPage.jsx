@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/client';
 import { useCart } from '../../context/CartContext';
+import { formatVND } from '../../utils/format';
 
 const PAYMENT_LABELS = {
   tienmat: 'Tiền mặt',
@@ -105,9 +106,14 @@ export default function CustomerSuccessPage() {
     ? new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     : '';
   const shortId = orderId.slice(-8).toUpperCase();
-  const paymentLabel = PAYMENT_LABELS[cart.paymentMethod] || 'Tiền mặt';
+  const paymentMethod = order?.paymentMethod || cart.paymentMethod;
+  const paymentLabel = PAYMENT_LABELS[paymentMethod] || 'Tiền mặt';
   const statusLabel = order?.statusLabel || ORDER_STATUS_LABELS[order?.status] || 'Đang xử lý';
   const paymentStatusLabel = order?.paymentStatusLabel || 'Chờ thanh toán';
+  const isCashPayment = paymentMethod === 'tienmat';
+  const cashAmountDue = order?.cashAmountDue || 0;
+  const cashTenderedAmount = order?.cashTenderedAmount || 0;
+  const cashChangeAmount = order?.cashChangeAmount || 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FDF8F3] px-5 py-8">
@@ -147,6 +153,43 @@ export default function CustomerSuccessPage() {
           </span>
         </div>
       </div>
+
+      <div className="mt-5 rounded-2xl border border-[#E8D5BC] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(59,35,20,0.05)]">
+        <p className="text-sm font-black text-[#3B2314]">Lưu ý về chỗ ngồi</p>
+        <p className="mt-1 text-xs font-semibold leading-5 text-[#8A6F5D]">
+          Nếu quý khách không hài lòng về chỗ ngồi hiện tại hoặc muốn chuyển sang chỗ khác, hãy gửi yêu cầu để nhân viên chủ động sắp xếp trước khi phục vụ món.
+        </p>
+      </div>
+
+      {isCashPayment && cashTenderedAmount > 0 && (
+        <div className="mt-5 rounded-2xl border border-[#F0D3A1] bg-[#FFF8EF] p-5 shadow-[0_8px_22px_rgba(200,146,42,0.10)]">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#C8922A] text-lg font-black text-white">
+              ₫
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-[#3B2314]">Vui lòng chuẩn bị tiền mặt</p>
+              <p className="mt-1 text-xs font-semibold text-[#8A6F5D]">
+                Khi món chuẩn bị phục vụ, nhân viên sẽ mang nước ra bàn, thu tiền và thối lại theo thông tin này.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-2 text-sm">
+            <div className="flex justify-between rounded-xl bg-white px-3 py-2">
+              <span className="font-semibold text-[#8A6F5D]">Cần thanh toán</span>
+              <span className="font-black text-[#3B2314]">{formatVND(cashAmountDue)}</span>
+            </div>
+            <div className="flex justify-between rounded-xl bg-white px-3 py-2">
+              <span className="font-semibold text-[#8A6F5D]">Bạn chuẩn bị</span>
+              <span className="font-black text-[#C8922A]">{formatVND(cashTenderedAmount)}</span>
+            </div>
+            <div className="flex justify-between rounded-xl bg-white px-3 py-2">
+              <span className="font-semibold text-[#8A6F5D]">Nhân viên thối lại</span>
+              <span className="font-black text-[#0F8A4B]">{formatVND(cashChangeAmount)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-5 rounded-2xl border border-[#E8D5BC] bg-white p-5 shadow-[0_8px_22px_rgba(59,35,20,0.06)]">
         <p className="mb-4 text-sm font-black text-[#1A0F00]">Tiến trình đơn hàng</p>

@@ -8,6 +8,7 @@ import {
   createPublicOrder,
   createOnlineOrder,
   getPublicOrderStatus,
+  requestTableChange,
 } from '../controllers/publicController.js';
 import { validate } from '../middleware/validate.js';
 
@@ -32,6 +33,10 @@ router.post(
     body('items').isArray({ min: 1 }).withMessage('Giỏ hàng đang trống'),
     body('items.*.menuItemId').notEmpty().withMessage('Món không hợp lệ'),
     body('items.*.quantity').isInt({ min: 1 }).withMessage('Số lượng phải lớn hơn 0'),
+    body('paymentMethod').optional().isIn(['tienmat', 'chuyenkhoan', 'momo', 'vnpay']),
+    body('cashAmountDue').optional().isInt({ min: 0 }),
+    body('cashTenderedAmount').optional().isInt({ min: 0 }),
+    body('cashChangeAmount').optional().isInt({ min: 0 }),
   ],
   validate,
   createPublicOrder
@@ -48,5 +53,11 @@ router.post(
   createOnlineOrder
 );
 router.get('/order/:orderId/status', getPublicOrderStatus);
+router.post(
+  '/order/:orderId/table-change-request',
+  [body('note').optional().isString().trim().isLength({ max: 200 })],
+  validate,
+  requestTableChange
+);
 
 export default router;

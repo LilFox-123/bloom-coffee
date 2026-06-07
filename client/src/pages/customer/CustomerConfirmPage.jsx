@@ -36,6 +36,7 @@ const MEMBER_TIER_STYLES = {
 const PLACEHOLDER_IMAGE = '/images/placeholder.svg';
 const MOMO_LOGO = '/images/payment/MOMO-Logo-App-6262c3743a290ef02396a24ea2b66c35.png';
 const VNPAY_LOGO = '/images/payment/images.png';
+const CASH_DENOMINATIONS = [10000, 20000, 50000, 100000, 200000, 500000];
 
 function MoMoLogo() {
   return (
@@ -196,6 +197,8 @@ export default function CustomerConfirmPage() {
   const [memberMessage, setMemberMessage] = useState('');
   const [memberError, setMemberError] = useState('');
   const [categories, setCategories] = useState([]);
+  const [cashChoice, setCashChoice] = useState('exact');
+  const [cashCustomInput, setCashCustomInput] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -218,6 +221,11 @@ export default function CustomerConfirmPage() {
   const appliedPromo = appliedPromoCode ? PROMO_CODES[appliedPromoCode] : null;
   const discountAmount = getDiscountAmount(appliedPromo, cartTotal);
   const payableTotal = Math.max(cartTotal - discountAmount, 0);
+  const customCashAmount = Number(String(cashCustomInput).replace(/\D/g, '')) || 0;
+  const cashTenderedAmount =
+    cashChoice === 'exact' ? payableTotal : cashChoice === 'custom' ? customCashAmount : Number(cashChoice);
+  const cashChangeAmount = Math.max(cashTenderedAmount - payableTotal, 0);
+  const cashPaymentInvalid = method === 'tienmat' && (!cashTenderedAmount || cashTenderedAmount < payableTotal);
   const estimatedMemberPoints = Math.floor(payableTotal / 10000);
   const orderId = null; // order is created on submit; QR uses a generic addInfo until then
   const momoError = method === 'momo' && error.includes('MoMo');
@@ -314,6 +322,13 @@ export default function CustomerConfirmPage() {
         customerId: cart.memberCustomer?._id || undefined,
         notes: notes || undefined,
         paymentMethod: method,
+        ...(method === 'tienmat'
+          ? {
+              cashAmountDue: payableTotal,
+              cashTenderedAmount,
+              cashChangeAmount,
+            }
+          : {}),
         items: cart.list.map((r) => ({
           menuItemId: r.menuItem._id,
           quantity: r.quantity,
@@ -329,6 +344,11 @@ export default function CustomerConfirmPage() {
   };
 
   const submit = async () => {
+    if (cashPaymentInvalid) {
+      setError('Vui lòng chọn hoặc nhập số tiền mặt đủ để nhân viên thối tiền.');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
     try {
@@ -375,6 +395,8 @@ export default function CustomerConfirmPage() {
   const buttonLabel =
     method === 'chuyenkhoan'
       ? 'Xác nhận đã thanh toán'
+      : method === 'tienmat'
+      ? 'Đặt món và chuẩn bị tiền'
       : method === 'momo' || method === 'vnpay'
       ? 'Thanh toán ngay'
       : 'Đặt món ngay';
@@ -577,6 +599,83 @@ export default function CustomerConfirmPage() {
           ))}
         </div>
       </div>
+
+      {method === 'tienmat' && (
+        <div className="mx-4 mt-4 rounded-2xl border border-[#E3D3C4] bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-black text-[#3B2314]">Chuẩn bị tiền mặt</p>
+              <p className="mt-1 text-xs font-medium text-[#8A6F5D]">
+                Chọn số tiền bạn sẽ đưa. Nhân viên sẽ thu khi giao món và thối tiền ngay tại bàn.
+              </p>
+            </div>
+            <span className="rounded-full bg-[#FFF3D8] px-3 py-1 text-xs font-bold text-[#C89B3C]">
+              Cần {formatVND(payableTotal)}
+            </span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setCashChoice('exact')}
+              className={`min-h-[44px] rounded-xl border text-sm font-black ${
+                cashChoice === 'exact'
+                  ? 'border-[#C89B3C] bg-[#C89B3C] text-white'
+                  : 'border-[#E3D3C4] bg-[#FAF6F1] text-[#3B2314]'
+              }`}
+            >
+              Vừa đủ
+            </button>
+            {CASH_DENOMINATIONS.map((amount) => {
+              const disabled = amount < payableTotal;
+              return (
+                <button
+                  key={amount}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setCashChoice(String(amount))}
+                  className={`min-h-[44px] rounded-xl border text-sm font-black ${
+                    cashChoice === String(amount)
+                      ? 'border-[#C89B3C] bg-[#C89B3C] text-white'
+                      : 'border-[#E3D3C4] bg-[#FAF6F1] text-[#3B2314]'
+                  } disabled:cursor-not-allowed disabled:opacity-35`}
+                >
+                  {amount / 1000}k
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3">
+            <label className="mb-1 block text-xs font-bold text-[#8A6F5D]">Hoặc nhập chính xác số tiền bạn đưa</label>
+            <input
+              value={cashCustomInput}
+              onFocus={() => setCashChoice('custom')}
+              onChange={(e) => {
+                setCashChoice('custom');
+                setCashCustomInput(e.target.value.replace(/[^\d]/g, ''));
+              }}
+              inputMode="numeric"
+              placeholder="Ví dụ: 100000"
+              className="min-h-[44px] w-full rounded-xl border border-[#E3D3C4] bg-[#FAF6F1] px-4 py-3 text-sm outline-none placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/25"
+            />
+          </div>
+
+          <div className="mt-3 rounded-xl bg-[#FFF8EF] p-3 text-sm">
+            <div className="flex justify-between">
+              <span className="font-medium text-[#8A6F5D]">Bạn chuẩn bị</span>
+              <span className="font-black text-[#3B2314]">{formatVND(cashTenderedAmount || 0)}</span>
+            </div>
+            <div className="mt-1 flex justify-between">
+              <span className="font-medium text-[#8A6F5D]">Nhân viên thối lại</span>
+              <span className="font-black text-[#0F8A4B]">{formatVND(cashChangeAmount)}</span>
+            </div>
+            {cashPaymentInvalid && (
+              <p className="mt-2 text-xs font-bold text-[#C62828]">Số tiền đưa phải lớn hơn hoặc bằng số tiền cần thanh toán.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* VietQR for bank transfer */}
       {method === 'chuyenkhoan' && (
