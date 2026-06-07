@@ -41,16 +41,16 @@ const TIER_META = {
 
 const MEMBERSHIP_SLIDES = [
   {
-    image: '/images/menu/menu-admin-hero-promo.png',
-    alt: 'Bloom Coffee membership promotion',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1800&q=85',
+    alt: 'Không gian quán cà phê chill với bàn ghế ấm cúng',
   },
   {
-    image: '/images/menu/golden-hour-promo.png',
-    alt: 'Bloom Coffee golden hour promotion',
+    image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1800&q=85',
+    alt: 'Quầy cà phê ấm áp dành cho khách hàng thân thiết',
   },
   {
-    image: '/images/menu/menu-promo-banner.svg',
-    alt: 'Bloom Coffee voucher promotion',
+    image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1800&q=85',
+    alt: 'Góc cà phê yên tĩnh phù hợp thư giãn và làm việc',
   },
 ];
 
