@@ -14,9 +14,9 @@ const router = Router();
 router.use(requireAuth, requireAdmin);
 
 const scheduleValidation = [
-  body('weeklySchedule').optional().isObject(),
-  body('weeklySchedule.*').optional().isArray(),
-  body('weeklySchedule.*.*').optional().isIn(['morning', 'afternoon', 'evening']),
+  body('weeklySchedule').optional().isObject().withMessage('Lịch làm việc không hợp lệ'),
+  body('weeklySchedule.*').optional().isArray().withMessage('Dữ liệu ca làm không hợp lệ'),
+  body('weeklySchedule.*.*').optional().isIn(['morning', 'afternoon', 'evening']).withMessage('Ca làm không hợp lệ'),
 ];
 
 router.get('/', listStaff);
@@ -36,7 +36,8 @@ router.patch(
   '/:id',
   [
     body('name').optional().isString().trim().notEmpty(),
-    body('phone').optional().isMobilePhone('vi-VN'),
+    body('phone').optional({ checkFalsy: true }).isMobilePhone('vi-VN').withMessage('Số điện thoại không hợp lệ'),
+    body('email').optional().isEmail().withMessage('Email không hợp lệ'),
     body('role').optional().isIn(['admin', 'nhanvien']),
     body('isActive').optional().isBoolean(),
     ...scheduleValidation,

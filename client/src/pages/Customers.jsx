@@ -41,25 +41,16 @@ const TIER_META = {
 
 const MEMBERSHIP_SLIDES = [
   {
-    eyebrow: 'Bloom Member',
-    title: 'Giảm ngay 3.000đ mỗi ly nước',
-    desc: 'Khách chỉ cần đọc hoặc nhập số điện thoại thành viên khi thanh toán. Áp dụng cho Cà phê, Trà và Nước ép.',
-    metric: '3k/ly',
-    tone: 'from-[#3B2314] via-[#6E4A32] to-[#C89B3C]',
+    image: '/images/menu/menu-admin-hero-promo.png',
+    alt: 'Bloom Coffee membership promotion',
   },
   {
-    eyebrow: 'Tích điểm',
-    title: '10.000đ = 1 điểm tích lũy',
-    desc: 'Điểm được cộng sau khi hóa đơn hoàn tất. Khách càng quay lại nhiều, hạng thành viên càng cao.',
-    metric: '10k = 1',
-    tone: 'from-[#0F5132] via-[#168A55] to-[#C89B3C]',
+    image: '/images/menu/golden-hour-promo.png',
+    alt: 'Bloom Coffee golden hour promotion',
   },
   {
-    eyebrow: 'Đổi điểm',
-    title: 'Đổi điểm lấy mã giảm giá',
-    desc: '50 điểm giảm 5.000đ, 100 điểm giảm 12.000đ, 200 điểm giảm 30.000đ, 300 điểm giảm 45.000đ.',
-    metric: '50+ điểm',
-    tone: 'from-[#1F2937] via-[#4C1D95] to-[#E91E8C]',
+    image: '/images/menu/menu-promo-banner.svg',
+    alt: 'Bloom Coffee voucher promotion',
   },
 ];
 
@@ -72,16 +63,9 @@ function getMemberTier(points = 0) {
 
 function MembershipSlide({ slide }) {
   return (
-    <div className={`relative min-h-[190px] overflow-hidden rounded-[28px] bg-gradient-to-br ${slide.tone} p-6 text-white shadow-[0_18px_45px_rgba(59,35,20,0.18)]`}>
-      <div className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-white/15" />
-      <div className="absolute bottom-4 right-6 text-[84px] font-black leading-none text-white/10">{slide.metric}</div>
-      <div className="relative z-10 max-w-2xl">
-        <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#FFE9B8]">
-          {slide.eyebrow}
-        </span>
-        <h2 className="mt-5 text-3xl font-black leading-tight xl:text-4xl">{slide.title}</h2>
-        <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/78">{slide.desc}</p>
-      </div>
+    <div className="relative h-[320px] overflow-hidden rounded-[30px] border border-[#E8D5BC] bg-[#3B2314] shadow-[0_20px_48px_rgba(59,35,20,0.18)] sm:h-[340px] xl:h-[356px]">
+      <img src={slide.image} alt={slide.alt} className="h-full w-full object-cover" loading="eager" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0F00]/18 via-transparent to-transparent" />
     </div>
   );
 }
@@ -89,7 +73,7 @@ function MembershipSlide({ slide }) {
 function TierMiniCard({ tier, count }) {
   const meta = TIER_META[tier];
   return (
-    <div className="rounded-2xl border border-[#E8D5BC] bg-white p-4 shadow-[0_10px_26px_rgba(59,35,20,0.06)]">
+    <div className="flex min-h-[108px] flex-col justify-center rounded-2xl border border-[#E8D5BC] bg-white p-4 shadow-[0_10px_26px_rgba(59,35,20,0.06)] xl:min-h-0">
       <div className={`mb-3 h-2 rounded-full bg-gradient-to-r ${meta.className}`} />
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -252,13 +236,13 @@ export default function Customers() {
         </div>
       </section>
 
-      <section className="mb-5 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-        <div>
+      <section className="mb-5 grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
+        <div className="flex min-h-0 flex-col">
           <MembershipSlide slide={MEMBERSHIP_SLIDES[activeSlide]} />
           <div className="mt-3 flex justify-center gap-2">
             {MEMBERSHIP_SLIDES.map((slide, index) => (
               <button
-                key={slide.title}
+                key={slide.image}
                 type="button"
                 aria-label={`Chuyển đến slide membership ${index + 1}`}
                 onClick={() => setActiveSlide(index)}
@@ -270,7 +254,7 @@ export default function Customers() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 xl:grid-rows-3">
           <StatCard label="Tổng khách hàng" value={stats.total} helper="Hồ sơ" tone="blue" />
           <StatCard label="Tổng điểm đã phát" value={stats.points.toLocaleString('vi-VN')} helper="Điểm" tone="green" />
           <StatCard label="Đang dùng member" value={stats.drinkDiscountCustomers} helper="Giảm 3k/ly" tone="gold" />
