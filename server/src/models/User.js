@@ -3,6 +3,19 @@ import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 12;
 
+const weeklyScheduleSchema = new mongoose.Schema(
+  {
+    monday: { type: [String], default: [] },
+    tuesday: { type: [String], default: [] },
+    wednesday: { type: [String], default: [] },
+    thursday: { type: [String], default: [] },
+    friday: { type: [String], default: [] },
+    saturday: { type: [String], default: [] },
+    sunday: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -12,6 +25,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, default: '' },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: [Date], default: [] },
+    weeklySchedule: { type: weeklyScheduleSchema, default: () => ({}) },
   },
   { timestamps: true }
 );

@@ -8,6 +8,101 @@ import { formatVND, formatDate, formatDateTime } from '../utils/format';
 
 const emptyForm = { name: '', phone: '', email: '' };
 
+const TIER_META = {
+  Diamond: {
+    label: 'Diamond',
+    range: 'Từ 1.000 điểm',
+    benefit: 'Giảm 15% + ưu tiên nhận khuyến mãi mới',
+    className: 'from-[#1F2937] via-[#4C1D95] to-[#C89B3C]',
+    badge: 'bg-[#F3E8FF] text-[#6D28D9]',
+  },
+  Gold: {
+    label: 'Gold',
+    range: '500 - 999 điểm',
+    benefit: 'Giảm 10% cho đơn từ 50.000đ',
+    className: 'from-[#8A5A12] via-[#C89B3C] to-[#F8D98A]',
+    badge: 'bg-[#FFF3D8] text-[#A56D13]',
+  },
+  Silver: {
+    label: 'Silver',
+    range: '200 - 499 điểm',
+    benefit: 'Giảm 5% cho đơn từ 50.000đ',
+    className: 'from-[#4B5563] via-[#9CA3AF] to-[#E5E7EB]',
+    badge: 'bg-[#EEF2FF] text-[#4F46E5]',
+  },
+  Member: {
+    label: 'Member',
+    range: '0 - 199 điểm',
+    benefit: 'Tích điểm cơ bản, giảm 3.000đ mỗi ly nước',
+    className: 'from-[#3B2314] via-[#6E4A32] to-[#C89B3C]',
+    badge: 'bg-[#E3F2FD] text-[#1565C0]',
+  },
+};
+
+const MEMBERSHIP_SLIDES = [
+  {
+    eyebrow: 'Bloom Member',
+    title: 'Giảm ngay 3.000đ mỗi ly nước',
+    desc: 'Khách chỉ cần đọc hoặc nhập số điện thoại thành viên khi thanh toán. Áp dụng cho Cà phê, Trà và Nước ép.',
+    metric: '3k/ly',
+    tone: 'from-[#3B2314] via-[#6E4A32] to-[#C89B3C]',
+  },
+  {
+    eyebrow: 'Tích điểm',
+    title: '10.000đ = 1 điểm tích lũy',
+    desc: 'Điểm được cộng sau khi hóa đơn hoàn tất. Khách càng quay lại nhiều, hạng thành viên càng cao.',
+    metric: '10k = 1',
+    tone: 'from-[#0F5132] via-[#168A55] to-[#C89B3C]',
+  },
+  {
+    eyebrow: 'Đổi điểm',
+    title: 'Đổi điểm lấy mã giảm giá',
+    desc: '50 điểm giảm 5.000đ, 100 điểm giảm 12.000đ, 200 điểm giảm 30.000đ, 300 điểm giảm 45.000đ.',
+    metric: '50+ điểm',
+    tone: 'from-[#1F2937] via-[#4C1D95] to-[#E91E8C]',
+  },
+];
+
+function getMemberTier(points = 0) {
+  if (points >= 1000) return 'Diamond';
+  if (points >= 500) return 'Gold';
+  if (points >= 200) return 'Silver';
+  return 'Member';
+}
+
+function MembershipSlide({ slide }) {
+  return (
+    <div className={`relative min-h-[190px] overflow-hidden rounded-[28px] bg-gradient-to-br ${slide.tone} p-6 text-white shadow-[0_18px_45px_rgba(59,35,20,0.18)]`}>
+      <div className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-white/15" />
+      <div className="absolute bottom-4 right-6 text-[84px] font-black leading-none text-white/10">{slide.metric}</div>
+      <div className="relative z-10 max-w-2xl">
+        <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#FFE9B8]">
+          {slide.eyebrow}
+        </span>
+        <h2 className="mt-5 text-3xl font-black leading-tight xl:text-4xl">{slide.title}</h2>
+        <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/78">{slide.desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function TierMiniCard({ tier, count }) {
+  const meta = TIER_META[tier];
+  return (
+    <div className="rounded-2xl border border-[#E8D5BC] bg-white p-4 shadow-[0_10px_26px_rgba(59,35,20,0.06)]">
+      <div className={`mb-3 h-2 rounded-full bg-gradient-to-r ${meta.className}`} />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-black text-[#1A0F00]">{meta.label}</p>
+          <p className="mt-0.5 text-xs font-bold text-[#8A6F5D]">{meta.range}</p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-black ${meta.badge}`}>{count}</span>
+      </div>
+      <p className="mt-3 text-xs font-semibold leading-5 text-[#6B4B37]">{meta.benefit}</p>
+    </div>
+  );
+}
+
 function StatCard({ label, value, helper, tone = 'gold' }) {
   const tones = {
     gold: 'bg-[#FFF3D8] text-[#A56D13]',
@@ -36,6 +131,7 @@ export default function Customers() {
   const [errors, setErrors] = useState({});
   const [expanded, setExpanded] = useState(null);
   const [history, setHistory] = useState({});
+  const [activeSlide, setActiveSlide] = useState(0);
 
   const load = async () => {
     try {
@@ -52,12 +148,32 @@ export default function Customers() {
     load();
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setActiveSlide((current) => (current + 1) % MEMBERSHIP_SLIDES.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
+
   const stats = useMemo(
     () => ({
       total: customers.length,
       points: customers.reduce((s, c) => s + c.points, 0),
-      eligible: customers.filter((c) => c.points >= 200).length,
+      drinkDiscountCustomers: customers.filter((c) => c.points > 0 || c.totalSpent > 0).length,
     }),
+    [customers]
+  );
+
+  const tierCounts = useMemo(
+    () =>
+      customers.reduce(
+        (acc, customer) => {
+          const tier = getMemberTier(customer.points || 0);
+          acc[tier] += 1;
+          return acc;
+        },
+        { Member: 0, Silver: 0, Gold: 0, Diamond: 0 }
+      ),
     [customers]
   );
 
@@ -136,21 +252,55 @@ export default function Customers() {
         </div>
       </section>
 
-      <div className="mb-5 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Tổng khách hàng" value={stats.total} helper="Hồ sơ" tone="blue" />
-        <StatCard label="Tổng điểm đã phát" value={stats.points.toLocaleString('vi-VN')} helper="Điểm" tone="green" />
-        <StatCard label="Từ hạng Silver" value={stats.eligible} helper=">=200 điểm" tone="gold" />
-      </div>
+      <section className="mb-5 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
+        <div>
+          <MembershipSlide slide={MEMBERSHIP_SLIDES[activeSlide]} />
+          <div className="mt-3 flex justify-center gap-2">
+            {MEMBERSHIP_SLIDES.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                aria-label={`Chuyển đến slide membership ${index + 1}`}
+                onClick={() => setActiveSlide(index)}
+                className={`h-2.5 rounded-full transition-all ${
+                  activeSlide === index ? 'w-8 bg-[#C89B3C]' : 'w-2.5 bg-[#D8C2AC]'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+          <StatCard label="Tổng khách hàng" value={stats.total} helper="Hồ sơ" tone="blue" />
+          <StatCard label="Tổng điểm đã phát" value={stats.points.toLocaleString('vi-VN')} helper="Điểm" tone="green" />
+          <StatCard label="Đang dùng member" value={stats.drinkDiscountCustomers} helper="Giảm 3k/ly" tone="gold" />
+        </div>
+      </section>
+
+      <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {['Member', 'Silver', 'Gold', 'Diamond'].map((tier) => (
+          <TierMiniCard key={tier} tier={tier} count={tierCounts[tier]} />
+        ))}
+      </section>
 
       <section className="mb-6 rounded-[24px] border border-[#E8D5BC] bg-white/85 p-4 shadow-[0_12px_32px_rgba(59,35,20,0.06)]">
-        <div className="relative max-w-md">
-          <IconSearch width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9C8472]" />
-          <input
-            className="min-h-[48px] w-full rounded-2xl border border-[#E1CDB9] bg-[#FFFDF9] pl-11 pr-4 text-sm font-medium outline-none transition placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-4 focus:ring-[#C89B3C]/15"
-            placeholder="Tìm tên, SĐT, email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="relative w-full max-w-md">
+            <IconSearch width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9C8472]" />
+            <input
+              className="min-h-[48px] w-full rounded-2xl border border-[#E1CDB9] bg-[#FFFDF9] pl-11 pr-4 text-sm font-medium outline-none transition placeholder:text-[#B59A85] focus:border-[#C89B3C] focus:ring-4 focus:ring-[#C89B3C]/15"
+              placeholder="Tìm tên, SĐT, email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {['Giảm 3.000đ/ly nước', '10.000đ = 1 điểm', 'Đổi điểm nhận voucher'].map((label) => (
+              <span key={label} className="rounded-full border border-[#E8D5BC] bg-[#FFF8EF] px-3 py-2 text-xs font-black text-[#6B4B37]">
+                {label}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -192,7 +342,12 @@ export default function Customers() {
                       <td className="px-4 py-3">{customer.phone}</td>
                       <td className="px-4 py-3 text-text-muted">{customer.email || '—'}</td>
                       <td className="px-4 py-3 text-center">
-                        <Badge color={customer.points >= 200 ? 'green' : 'blue'}>{customer.points} điểm</Badge>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className={`rounded-full px-3 py-1 text-xs font-black ${TIER_META[getMemberTier(customer.points || 0)].badge}`}>
+                            {getMemberTier(customer.points || 0)}
+                          </span>
+                          <Badge color={customer.points >= 200 ? 'green' : 'blue'}>{customer.points} điểm</Badge>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">{formatVND(customer.totalSpent)}</td>
                       <td className="px-4 py-3 text-text-muted">{formatDate(customer.joinedAt)}</td>

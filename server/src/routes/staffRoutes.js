@@ -13,6 +13,12 @@ import { validate } from '../middleware/validate.js';
 const router = Router();
 router.use(requireAuth, requireAdmin);
 
+const scheduleValidation = [
+  body('weeklySchedule').optional().isObject(),
+  body('weeklySchedule.*').optional().isArray(),
+  body('weeklySchedule.*.*').optional().isIn(['morning', 'afternoon', 'evening']),
+];
+
 router.get('/', listStaff);
 router.post(
   '/',
@@ -21,6 +27,7 @@ router.post(
     body('email').isEmail().withMessage('Email không hợp lệ'),
     body('role').isIn(['admin', 'nhanvien']).withMessage('Vai trò không hợp lệ'),
     body('password').isLength({ min: 6 }).withMessage('Mật khẩu tối thiểu 6 ký tự'),
+    ...scheduleValidation,
   ],
   validate,
   createStaff
@@ -32,6 +39,7 @@ router.patch(
     body('phone').optional().isMobilePhone('vi-VN'),
     body('role').optional().isIn(['admin', 'nhanvien']),
     body('isActive').optional().isBoolean(),
+    ...scheduleValidation,
   ],
   validate,
   updateStaff
