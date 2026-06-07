@@ -43,14 +43,35 @@ const MEMBERSHIP_SLIDES = [
   {
     image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1800&q=85',
     alt: 'Không gian quán cà phê chill với bàn ghế ấm cúng',
+    badge: 'Bloom Loyalty',
+    title: 'Khách quen luôn có ưu đãi riêng',
+    subtitle: 'Giảm 3.000đ cho mỗi ly nước khi dùng thẻ thành viên.',
+    cards: [
+      { label: 'Giảm trực tiếp', value: '3.000đ/ly' },
+      { label: 'Áp dụng', value: 'Cà phê · Trà · Nước ép' },
+    ],
   },
   {
     image: 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1800&q=85',
     alt: 'Quầy cà phê ấm áp dành cho khách hàng thân thiết',
+    badge: 'Tích điểm',
+    title: 'Uống càng đều, hạng càng cao',
+    subtitle: 'Mỗi hóa đơn hoàn tất tự động cộng điểm vào hồ sơ khách.',
+    cards: [
+      { label: 'Quy đổi điểm', value: '10.000đ = 1 điểm' },
+      { label: 'Hạng cao nhất', value: 'Diamond 15%' },
+    ],
   },
   {
     image: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1800&q=85',
     alt: 'Góc cà phê yên tĩnh phù hợp thư giãn và làm việc',
+    badge: 'Đổi voucher',
+    title: 'Biến điểm thành mã giảm giá',
+    subtitle: 'Khách có thể đổi điểm để nhận ưu đãi cho lần ghé tiếp theo.',
+    cards: [
+      { label: '50 điểm', value: 'Giảm 5.000đ' },
+      { label: '300 điểm', value: 'Giảm 45.000đ' },
+    ],
   },
 ];
 
@@ -65,7 +86,35 @@ function MembershipSlide({ slide }) {
   return (
     <div className="relative h-[320px] overflow-hidden rounded-[30px] border border-[#E8D5BC] bg-[#3B2314] shadow-[0_20px_48px_rgba(59,35,20,0.18)] sm:h-[340px] xl:h-[356px]">
       <img src={slide.image} alt={slide.alt} className="h-full w-full object-cover" loading="eager" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0F00]/18 via-transparent to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0F00]/78 via-[#1A0F00]/26 to-transparent" />
+      <div className="absolute inset-0 flex flex-col justify-between p-5 text-white sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#FFE9B8] backdrop-blur-md">
+            {slide.badge}
+          </span>
+          <div className="hidden max-w-[260px] grid-cols-2 gap-3 sm:grid">
+            {slide.cards.map((card) => (
+              <div key={card.label} className="rounded-2xl border border-white/20 bg-white/16 p-3 shadow-[0_14px_32px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                <p className="text-[11px] font-black uppercase tracking-[0.08em] text-white/70">{card.label}</p>
+                <p className="mt-1 text-sm font-black leading-tight text-white">{card.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="max-w-xl">
+          <h2 className="text-3xl font-black leading-tight drop-shadow xl:text-5xl">{slide.title}</h2>
+          <p className="mt-3 max-w-md text-sm font-bold leading-6 text-white/86 drop-shadow">{slide.subtitle}</p>
+          <div className="mt-4 grid gap-2 sm:hidden">
+            {slide.cards.map((card) => (
+              <div key={card.label} className="rounded-2xl border border-white/20 bg-white/16 px-4 py-3 backdrop-blur-md">
+                <p className="text-xs font-black text-[#FFE9B8]">{card.label}</p>
+                <p className="text-sm font-black text-white">{card.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
