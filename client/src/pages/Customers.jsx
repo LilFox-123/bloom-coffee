@@ -89,14 +89,14 @@ function MembershipSlide({ slide }) {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#1A0F00]/78 via-[#1A0F00]/26 to-transparent" />
       <div className="absolute inset-0 flex flex-col justify-between p-5 text-white sm:p-6">
         <div className="flex items-start justify-between gap-4">
-          <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#FFE9B8] backdrop-blur-md">
+          <span className="inline-flex rounded-full border border-[#F8D98A]/70 bg-[#3B2314]/82 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#FFE9B8] shadow-[0_10px_26px_rgba(0,0,0,0.28)] backdrop-blur-md">
             {slide.badge}
           </span>
           <div className="hidden max-w-[260px] grid-cols-2 gap-3 sm:grid">
             {slide.cards.map((card) => (
-              <div key={card.label} className="rounded-2xl border border-white/20 bg-white/16 p-3 shadow-[0_14px_32px_rgba(0,0,0,0.18)] backdrop-blur-md">
-                <p className="text-[11px] font-black uppercase tracking-[0.08em] text-white/70">{card.label}</p>
-                <p className="mt-1 text-sm font-black leading-tight text-white">{card.value}</p>
+              <div key={card.label} className="rounded-2xl border border-[#F8D98A]/65 bg-[#3B2314]/86 p-3 shadow-[0_16px_36px_rgba(0,0,0,0.34)] ring-1 ring-white/10 backdrop-blur-md">
+                <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[#FFE9B8]">{card.label}</p>
+                <p className="mt-1 text-sm font-black leading-tight text-white drop-shadow">{card.value}</p>
               </div>
             ))}
           </div>
@@ -107,7 +107,7 @@ function MembershipSlide({ slide }) {
           <p className="mt-3 max-w-md text-sm font-bold leading-6 text-white/86 drop-shadow">{slide.subtitle}</p>
           <div className="mt-4 grid gap-2 sm:hidden">
             {slide.cards.map((card) => (
-              <div key={card.label} className="rounded-2xl border border-white/20 bg-white/16 px-4 py-3 backdrop-blur-md">
+              <div key={card.label} className="rounded-2xl border border-[#F8D98A]/65 bg-[#3B2314]/86 px-4 py-3 shadow-[0_14px_30px_rgba(0,0,0,0.28)] backdrop-blur-md">
                 <p className="text-xs font-black text-[#FFE9B8]">{card.label}</p>
                 <p className="text-sm font-black text-white">{card.value}</p>
               </div>
