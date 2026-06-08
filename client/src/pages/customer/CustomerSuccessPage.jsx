@@ -12,6 +12,20 @@ const PAYMENT_LABELS = {
   vnpay: 'VNPay',
 };
 
+const BANK_CONFIG = {
+  bankId: 'MB',
+  accountNumber: '1234567890',
+  accountName: 'BLOOM COFFEE',
+  template: 'compact2',
+};
+
+const RETRY_METHODS = [
+  { id: 'momo', label: 'MoMo' },
+  { id: 'vnpay', label: 'VNPay' },
+  { id: 'chuyenkhoan', label: 'Chuyển khoản' },
+  { id: 'tienmat', label: 'Tiền mặt' },
+];
+
 const ORDER_STATUS_LABELS = {
   moi: 'Chờ xác nhận',
   daxacnhan: 'Đã xác nhận đơn',
@@ -54,6 +68,13 @@ function isStepDone(order, stepIndex) {
   return (STATUS_INDEX[order.status] || 0) > stepIndex;
 }
 
+function buildVietQrSrc(amount, orderId) {
+  return (
+    `https://img.vietqr.io/image/${BANK_CONFIG.bankId}-${BANK_CONFIG.accountNumber}-${BANK_CONFIG.template}.png` +
+    `?amount=${amount}&addInfo=BLOOM${orderId || 'ORDER'}&accountName=${encodeURIComponent(BANK_CONFIG.accountName)}`
+  );
+}
+
 function customizationText(customizations = {}) {
   return [customizations.ice, customizations.sugar, customizations.sweetness, customizations.note]
     .filter(Boolean)
@@ -87,6 +108,8 @@ export default function CustomerSuccessPage() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [paymentAction, setPaymentAction] = useState('');
+  const [paymentError, setPaymentError] = useState('');
 
   const fetchStatus = useCallback(() => {
     api
@@ -102,6 +125,41 @@ export default function CustomerSuccessPage() {
     return () => clearInterval(id);
   }, [fetchStatus]);
 
+  const startPayment = async (nextMethod) => {
+    if (!order || paymentAction) return;
+
+    setPaymentAction(nextMethod);
+    setPaymentError('');
+    try {
+      const totalAmount = order.totalAmount || order.cashAmountDue || 0;
+      const methodRes = await api.post(`/public/order/${orderId}/payment-method`, {
+        paymentMethod: nextMethod,
+        ...(nextMethod === 'tienmat' ? { cashTenderedAmount: totalAmount } : {}),
+      });
+      const updatedOrder = methodRes.data.data;
+      setOrder(updatedOrder);
+
+      if (nextMethod === 'momo' || nextMethod === 'vnpay') {
+        const endpoint = nextMethod === 'momo' ? '/payment/momo' : '/payment/vnpay';
+        const payRes = await api.post(endpoint, {
+          amount: updatedOrder.totalAmount || totalAmount,
+          orderInfo: `Bloom Coffee - ${updatedOrder.tableName || orderId.slice(-8).toUpperCase()}`,
+          orderId,
+        });
+        const payUrl = payRes.data.data?.payUrl || payRes.data.payUrl;
+        if (payUrl) {
+          window.location.href = payUrl;
+          return;
+        }
+        throw new Error('Không nhận được liên kết thanh toán');
+      }
+    } catch (err) {
+      setPaymentError(err.message || 'Chưa thể khởi tạo thanh toán. Vui lòng thử lại.');
+    } finally {
+      setPaymentAction('');
+    }
+  };
+
   const createdLabel = order?.createdAt
     ? new Date(order.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
     : '';
@@ -114,6 +172,14 @@ export default function CustomerSuccessPage() {
   const cashAmountDue = order?.cashAmountDue || 0;
   const cashTenderedAmount = order?.cashTenderedAmount || 0;
   const cashChangeAmount = order?.cashChangeAmount || 0;
+  const payableAmount = order?.totalAmount || cashAmountDue || 0;
+  const canResumePayment =
+    order &&
+    order.status !== 'hoantat' &&
+    order.paymentStatus !== 'paid' &&
+    (order.paymentStatus === 'failed' || paymentMethod === 'momo' || paymentMethod === 'vnpay' || paymentMethod === 'chuyenkhoan');
+  const isBankTransferPayment = paymentMethod === 'chuyenkhoan' && canResumePayment;
+  const retryQrSrc = buildVietQrSrc(payableAmount, orderId);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FDF8F3] px-5 py-8">
@@ -153,6 +219,71 @@ export default function CustomerSuccessPage() {
           </span>
         </div>
       </div>
+
+      {canResumePayment && (
+        <div className="mt-5 rounded-2xl border border-[#F0D3A1] bg-white p-5 shadow-[0_8px_22px_rgba(200,146,42,0.10)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-black text-[#3B2314]">Thanh toán đơn này</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-[#8A6F5D]">
+                Đơn chưa được thanh toán. Bạn có thể thanh toán lại hoặc đổi sang hình thức khác.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-[#FFF3D8] px-3 py-1 text-xs font-black text-[#C8922A]">
+              {formatVND(payableAmount)}
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {RETRY_METHODS.map((method) => {
+              const selected = paymentMethod === method.id;
+              const busy = paymentAction === method.id;
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => startPayment(method.id)}
+                  disabled={Boolean(paymentAction)}
+                  className={`min-h-[46px] rounded-xl border px-3 text-sm font-black transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    selected
+                      ? 'border-[#C8922A] bg-[#C8922A] text-white'
+                      : 'border-[#E8D5BC] bg-[#FFF8EF] text-[#3B2314]'
+                  }`}
+                >
+                  {busy ? 'Đang xử lý...' : method.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {paymentError && <p className="mt-3 text-sm font-semibold text-[#C62828]">{paymentError}</p>}
+
+          {isBankTransferPayment && (
+            <div className="mt-4 flex flex-col items-center rounded-2xl border border-[#E8D5BC] bg-[#FFF8EF] p-4">
+              <p className="text-sm font-black text-[#3B2314]">Quét mã để thanh toán</p>
+              <img
+                src={retryQrSrc}
+                alt="QR thanh toán"
+                className="mt-3 h-48 w-48 rounded-xl border border-[#E3D3C4] bg-white"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <div className="mt-3 text-center text-xs font-semibold leading-5 text-[#8A6F5D]">
+                <p>
+                  Ngân hàng: <span className="text-[#3B2314]">{BANK_CONFIG.bankId}</span>
+                </p>
+                <p>
+                  Số tài khoản: <span className="font-mono text-[#3B2314]">{BANK_CONFIG.accountNumber}</span>
+                </p>
+                <p>
+                  Nội dung: <span className="break-all font-mono text-[#3B2314]">BLOOM{orderId}</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mt-5 rounded-2xl border border-[#E8D5BC] bg-[#FFF8EF] p-4 shadow-[0_8px_22px_rgba(59,35,20,0.05)]">
         <p className="text-sm font-black text-[#3B2314]">Lưu ý về chỗ ngồi</p>

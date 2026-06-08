@@ -4,6 +4,7 @@ import {
   createMoMoPayment,
   createVNPayPayment,
   handleMoMoIpn,
+  handleMoMoReturn,
   handleVNPayReturn,
 } from '../controllers/paymentController.js';
 import { validate } from '../middleware/validate.js';
@@ -22,6 +23,7 @@ router.post(
   createMoMoPayment
 );
 router.post('/momo/ipn', handleMoMoIpn);
+router.get('/momo/return', handleMoMoReturn);
 router.post(
   '/vnpay',
   [

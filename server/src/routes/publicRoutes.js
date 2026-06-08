@@ -6,6 +6,7 @@ import {
   getPublicMenu,
   upsertPublicMember,
   createPublicOrder,
+  updatePublicOrderPaymentMethod,
   createOnlineOrder,
   getPublicOrderStatus,
   requestTableChange,
@@ -55,6 +56,15 @@ router.post(
   createOnlineOrder
 );
 router.get('/order/:orderId/status', getPublicOrderStatus);
+router.post(
+  '/order/:orderId/payment-method',
+  [
+    body('paymentMethod').isIn(['tienmat', 'chuyenkhoan', 'momo', 'vnpay']).withMessage('Hình thức thanh toán không hợp lệ'),
+    body('cashTenderedAmount').optional().isInt({ min: 0 }),
+  ],
+  validate,
+  updatePublicOrderPaymentMethod
+);
 router.post(
   '/order/:orderId/table-change-request',
   [body('note').optional().isString().trim().isLength({ max: 200 })],

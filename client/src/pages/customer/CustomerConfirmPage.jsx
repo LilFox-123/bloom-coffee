@@ -410,9 +410,11 @@ export default function CustomerConfirmPage() {
 
     setSubmitting(true);
     setError('');
+    let createdOrderId = null;
     try {
       const orderData = await createOrder();
       const newOrderId = orderData.orderId;
+      createdOrderId = newOrderId;
       const paymentAmount = orderData.totalAmount ?? payableTotal;
 
       if (method === 'momo' || method === 'vnpay') {
@@ -442,6 +444,11 @@ export default function CustomerConfirmPage() {
       cart.clear();
       navigate(`/order/${tableId}/success/${newOrderId}`, { replace: true });
     } catch {
+      if ((method === 'momo' || method === 'vnpay') && createdOrderId) {
+        cart.clear();
+        navigate(`/order/${tableId}/success/${createdOrderId}?paymentStatus=failed&gateway=${method}`, { replace: true });
+        return;
+      }
       setError(
         method === 'momo'
           ? 'Không thể kết nối MoMo, vui lòng thử lại'

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
@@ -29,18 +30,14 @@ function buildMoMoRawSignature(params) {
 }
 
 function buildMoMoIpnRawSignature(body, accessKey) {
-  return buildMoMoRawSignature({
-    accessKey,
-    amount: body.amount ?? '',
-    extraData: body.extraData ?? '',
-    ipnUrl: body.ipnUrl ?? '',
-    orderId: body.orderId ?? '',
-    orderInfo: body.orderInfo ?? '',
-    partnerCode: body.partnerCode ?? '',
-    redirectUrl: body.redirectUrl ?? '',
-    requestId: body.requestId ?? '',
-    requestType: body.requestType ?? '',
-  });
+  return (
+    `accessKey=${accessKey}&amount=${body.amount ?? ''}&extraData=${body.extraData ?? ''}` +
+    `&message=${body.message ?? ''}&orderId=${body.orderId ?? ''}&orderInfo=${body.orderInfo ?? ''}` +
+    `&orderType=${body.orderType ?? ''}&partnerCode=${body.partnerCode ?? ''}` +
+    `&payType=${body.payType ?? ''}&requestId=${body.requestId ?? ''}` +
+    `&responseTime=${body.responseTime ?? ''}&resultCode=${body.resultCode ?? ''}` +
+    `&transId=${body.transId ?? ''}`
+  );
 }
 
 function encodeVnpValue(value) {
@@ -72,6 +69,20 @@ function getVNPayReturnUrl(req) {
   return process.env.VNPAY_RETURN_URL || `${getRequestOrigin(req)}/api/payment/vnpay/return`;
 }
 
+async function findOrderById(orderId) {
+  if (!mongoose.isValidObjectId(orderId)) return null;
+  return Order.findById(orderId);
+}
+
+function paymentResultRedirectUrl(origin, order, orderId, paymentStatus, gateway) {
+  const params = new URLSearchParams({ paymentStatus, gateway });
+  if (order?.tableId) {
+    return `${origin}/order/${order.tableId}/success/${order._id}?${params.toString()}`;
+  }
+  params.set('id', String(order?._id || orderId || ''));
+  return `${origin}/order/success?${params.toString()}`;
+}
+
 function vnpDate(d) {
   const pad = (n) => String(n).padStart(2, '0');
   return (
@@ -82,8 +93,11 @@ function vnpDate(d) {
 
 async function updateOrderPaymentStatus(orderId, paymentStatus) {
   if (!orderId) return null;
-  const order = await Order.findById(orderId);
+  const order = await findOrderById(orderId);
   if (!order) return null;
+  if (order.paymentStatus === 'paid' && paymentStatus !== 'paid') {
+    return order;
+  }
   order.paymentStatus = paymentStatus;
   if (paymentStatus === 'paid' && ['moi', 'daxacnhan'].includes(order.status)) {
     order.status = 'dathanhtoan';
@@ -111,8 +125,9 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
   const requestType = 'captureWallet';
   const extraData = '';
   const info = orderInfo || 'Thanh toan Bloom Coffee';
-  const redirect = process.env.MOMO_REDIRECT_URL;
-  const ipn = process.env.MOMO_IPN_URL;
+  const origin = getRequestOrigin(req);
+  const redirect = process.env.MOMO_REDIRECT_URL || `${origin}/api/payment/momo/return`;
+  const ipn = process.env.MOMO_IPN_URL || `${origin}/api/payment/momo/ipn`;
   const momoOrderId = String(orderId);
   const momoAmount = String(amount);
 
@@ -158,11 +173,13 @@ export const createMoMoPayment = asyncHandler(async (req, res) => {
     });
     const data = await momoRes.json();
     if (data.resultCode !== 0 || !data.payUrl) {
+      await updateOrderPaymentStatus(orderId, 'failed');
       return res.json({ success: false, message: data.message || 'MoMo từ chối giao dịch' });
     }
     res.json({ success: true, payUrl: data.payUrl, data: { payUrl: data.payUrl } });
   } catch (error) {
     console.error('[payment] MoMo request failed:', error.message);
+    await updateOrderPaymentStatus(orderId, 'failed');
     res.json({ success: false, message: 'Không thể kết nối MoMo, vui lòng thử lại' });
   } finally {
     clearTimeout(timeout);
@@ -186,6 +203,30 @@ export const handleMoMoIpn = asyncHandler(async (req, res) => {
   const paymentStatus = Number(resultCode) === 0 ? 'paid' : 'failed';
   await updateOrderPaymentStatus(orderId, paymentStatus);
   res.json({ success: true });
+});
+
+// GET /api/payment/momo/return
+export const handleMoMoReturn = asyncHandler(async (req, res) => {
+  const accessKey = process.env.MOMO_ACCESS_KEY;
+  const secretKey = process.env.MOMO_SECRET_KEY;
+  const origin = getRequestOrigin(req);
+  const { signature, resultCode, orderId } = req.query;
+
+  const fallbackOrder = await findOrderById(orderId);
+  if (!accessKey || !secretKey) {
+    console.error('[MoMo] Missing secret on return');
+    return res.redirect(paymentResultRedirectUrl(origin, fallbackOrder, orderId, 'failed', 'momo'));
+  }
+
+  const expectedSignature = hmacSha256(buildMoMoIpnRawSignature(req.query, accessKey), secretKey);
+  if (!safeEqual(signature, expectedSignature)) {
+    console.error('[MoMo] Invalid return signature');
+    return res.redirect(paymentResultRedirectUrl(origin, fallbackOrder, orderId, 'failed', 'momo'));
+  }
+
+  const paymentStatus = Number(resultCode) === 0 ? 'paid' : 'failed';
+  const order = await updateOrderPaymentStatus(orderId, paymentStatus);
+  res.redirect(paymentResultRedirectUrl(origin, order, orderId, paymentStatus, 'momo'));
 });
 
 /* =====================  VNPay (sandbox)  ===================== */
@@ -241,9 +282,10 @@ export const createVNPayPayment = asyncHandler(async (req, res) => {
 export const handleVNPayReturn = asyncHandler(async (req, res) => {
   const secretKey = process.env.VNPAY_HASH_SECRET;
   const origin = getRequestOrigin(req);
+  const fallbackOrder = await findOrderById(req.query.vnp_TxnRef);
   if (!secretKey) {
     console.error('[VNPay] Missing VNPAY_HASH_SECRET on return');
-    return res.redirect(`${origin}/order?paymentStatus=failed`);
+    return res.redirect(paymentResultRedirectUrl(origin, fallbackOrder, req.query.vnp_TxnRef, 'failed', 'vnpay'));
   }
 
   const { vnp_SecureHash: secureHash, vnp_SecureHashType: _hashType, ...rest } = req.query;
@@ -253,15 +295,10 @@ export const handleVNPayReturn = asyncHandler(async (req, res) => {
 
   if (!safeEqual(String(secureHash || '').toLowerCase(), expectedHash.toLowerCase())) {
     console.error('[VNPay] Invalid return signature');
-    return res.redirect(`${origin}/order?paymentStatus=failed`);
+    return res.redirect(paymentResultRedirectUrl(origin, fallbackOrder, req.query.vnp_TxnRef, 'failed', 'vnpay'));
   }
 
   const paymentStatus = req.query.vnp_ResponseCode === '00' ? 'paid' : 'failed';
   const order = await updateOrderPaymentStatus(req.query.vnp_TxnRef, paymentStatus);
-  if (order?.tableId) {
-    return res.redirect(
-      `${origin}/order/${order.tableId}/success/${order._id}?paymentStatus=${paymentStatus}&gateway=vnpay`
-    );
-  }
-  res.redirect(`${origin}/order/success?id=${req.query.vnp_TxnRef}&paymentStatus=${paymentStatus}&gateway=vnpay`);
+  res.redirect(paymentResultRedirectUrl(origin, order, req.query.vnp_TxnRef, paymentStatus, 'vnpay'));
 });

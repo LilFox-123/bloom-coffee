@@ -378,7 +378,7 @@ function customizationText(customizations = {}) {
     .join(' · ');
 }
 
-function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName }) {
+function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, onViewOrder, tableName }) {
   if (!open) return null;
 
   return (
@@ -432,6 +432,13 @@ function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName })
                       minute: '2-digit',
                     })
                   : '';
+                const canResumePayment =
+                  order.status !== 'hoantat' &&
+                  order.paymentStatus !== 'paid' &&
+                  (order.paymentStatus === 'failed' ||
+                    order.paymentMethod === 'momo' ||
+                    order.paymentMethod === 'vnpay' ||
+                    order.paymentMethod === 'chuyenkhoan');
                 return (
                   <article
                     key={order.orderId}
@@ -468,6 +475,20 @@ function MyOrdersPanel({ open, orders, loading, onClose, onRefresh, tableName })
                           <ItemStatusPill status={item.status} />
                         </div>
                       ))}
+                    </div>
+
+                    <div className="border-t border-[#F3E8D8] px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => onViewOrder(order)}
+                        className={`min-h-[44px] w-full rounded-xl px-4 text-sm font-black transition active:scale-95 ${
+                          canResumePayment
+                            ? 'bg-[#C89B3C] text-white shadow-[0_8px_18px_rgba(200,155,60,0.22)]'
+                            : 'border border-[#E3D3C4] bg-white text-[#5A4232]'
+                        }`}
+                      >
+                        {canResumePayment ? 'Thanh toán / đổi phương thức' : 'Xem chi tiết đơn'}
+                      </button>
                     </div>
                   </article>
                 );
@@ -958,6 +979,10 @@ export default function CustomerMenuPage() {
         tableName={table.tableName}
         onClose={() => setOrdersOpen(false)}
         onRefresh={loadMyOrders}
+        onViewOrder={(order) => {
+          setOrdersOpen(false);
+          navigate(`/order/${tableId}/success/${order.orderId}`);
+        }}
       />
       <QuickCustomizeSheet
         open={Boolean(customizeItem)}

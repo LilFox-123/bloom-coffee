@@ -25,6 +25,7 @@ const PAYMENT_STATUS_LABELS = {
   failed: 'Thanh toán thất bại',
 };
 
+const PAYMENT_METHODS = ['tienmat', 'chuyenkhoan', 'momo', 'vnpay'];
 const MEMBER_DRINK_DISCOUNT = 3000;
 const MEMBER_DISCOUNT_CATEGORIES = ['Cà phê', 'Trà', 'Nước ép'];
 const PROMO_CODES = {
@@ -120,6 +121,12 @@ function publicOrderPayload(order, table) {
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
   };
+}
+
+function orderTotalAmount(order) {
+  const storedTotal = Number(order.totalAmount);
+  if (Number.isFinite(storedTotal) && storedTotal > 0) return storedTotal;
+  return order.items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0);
 }
 
 function cleanCustomizations(customizations = {}) {
@@ -434,6 +441,51 @@ export const createPublicOrder = asyncHandler(async (req, res) => {
       estimatedWait: 15,
     },
   });
+});
+
+// POST /api/public/order/:orderId/payment-method
+export const updatePublicOrderPaymentMethod = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { paymentMethod, cashTenderedAmount = 0 } = req.body;
+
+  if (!mongoose.isValidObjectId(orderId)) {
+    return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+  }
+  if (!PAYMENT_METHODS.includes(paymentMethod)) {
+    return res.status(400).json({ success: false, message: 'Hình thức thanh toán không hợp lệ' });
+  }
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+  }
+  if (order.status === 'hoantat' || order.paymentStatus === 'paid') {
+    return res.status(400).json({ success: false, message: 'Đơn hàng này không thể đổi thanh toán' });
+  }
+
+  const totalAmount = orderTotalAmount(order);
+  if (!Number.isFinite(Number(order.totalAmount)) || Number(order.totalAmount) <= 0) {
+    order.totalAmount = totalAmount;
+  }
+  order.paymentMethod = paymentMethod;
+  order.paymentStatus = 'pending';
+  if (paymentMethod === 'tienmat') {
+    const tendered = Number(cashTenderedAmount) || totalAmount;
+    if (tendered < totalAmount) {
+      return res.status(400).json({ success: false, message: 'Số tiền khách chuẩn bị chưa đủ để thanh toán' });
+    }
+    order.cashAmountDue = totalAmount;
+    order.cashTenderedAmount = tendered;
+    order.cashChangeAmount = Math.max(tendered - totalAmount, 0);
+  } else {
+    order.cashAmountDue = 0;
+    order.cashTenderedAmount = 0;
+    order.cashChangeAmount = 0;
+  }
+
+  await order.save();
+  const table = await Table.findById(order.tableId);
+  res.json({ success: true, data: publicOrderPayload(order, table) });
 });
 
 // POST /api/public/online-order
